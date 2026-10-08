@@ -232,6 +232,32 @@ class OnboardingPlan:
 
 
 @dataclass
+class FullAnalysisResult:
+    """Unified result containing the entire repository intelligence model."""
+
+    scan: RepositoryScanResult
+    analyses: dict[str, ModuleAnalysis]
+    graph: DependencyGraph
+    entry_points: list[EntryPointRecord]
+    hotspots: list[HotspotRecord]
+    layers: list[ArchitecturalLayer]
+    reading_order: list[ReadingOrderItem]
+    onboarding: OnboardingPlan
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "summary": self.scan.summary.to_dict(),
+            "entry_points": [ep.to_dict() for ep in self.entry_points],
+            "reading_order": [ro.to_dict() for ro in self.reading_order],
+            "hotspots": [h.to_dict() for h in self.hotspots],
+            "architecture": [l.to_dict() for l in self.layers],
+            "onboarding": self.onboarding.to_dict(),
+            "graph": self.graph.to_dict(),
+            "files": [f.to_dict() for f in self.scan.files],
+        }
+
+
+@dataclass
 class DependencyGraph:
     """Directed dependency graph across repository modules."""
 

@@ -135,23 +135,7 @@ def classify_file(rel_path: str, ext: str, language: str) -> FileCategory:
     if re.search(r"\.(test|spec)\.(js|ts|jsx|tsx)$", filename):
         return FileCategory.TEST
 
-    # 2. Documentation
-    if ext.lower() in {".md", ".rst", ".adoc"}:
-        return FileCategory.DOCUMENTATION
-    if any(lower_path.startswith(d) for d in ("docs/", "doc/", "documentation/")):
-        return FileCategory.DOCUMENTATION
-    if any(name_stem.startswith(doc_stem) for doc_stem in DOC_FILENAMES):
-        return FileCategory.DOCUMENTATION
-
-    # 3. Configuration & Build
-    if filename.lower() in CONFIG_FILENAMES:
-        return FileCategory.CONFIGURATION
-    if ext.lower() in {".toml", ".ini", ".cfg", ".yaml", ".yml", ".json"} and not any(
-        lower_path.startswith(d) for d in ("src/", "lib/", "app/")
-    ):
-        return FileCategory.CONFIGURATION
-
-    # 4. Source code
+    # 2. Source code (check programming language source files)
     if language in {
         "Python",
         "JavaScript",
@@ -170,7 +154,26 @@ def classify_file(rel_path: str, ext: str, language: str) -> FileCategory:
         "Shell",
         "SQL",
     }:
+        # Unless it's explicitly a config or build file like setup.py
+        if filename.lower() in CONFIG_FILENAMES:
+            return FileCategory.CONFIGURATION
         return FileCategory.SOURCE
+
+    # 3. Documentation
+    if ext.lower() in {".md", ".rst", ".adoc"}:
+        return FileCategory.DOCUMENTATION
+    if any(lower_path.startswith(d) for d in ("docs/", "doc/", "documentation/")):
+        return FileCategory.DOCUMENTATION
+    if any(name_stem.startswith(doc_stem) for doc_stem in DOC_FILENAMES):
+        return FileCategory.DOCUMENTATION
+
+    # 4. Configuration & Build
+    if filename.lower() in CONFIG_FILENAMES:
+        return FileCategory.CONFIGURATION
+    if ext.lower() in {".toml", ".ini", ".cfg", ".yaml", ".yml", ".json"} and not any(
+        lower_path.startswith(d) for d in ("src/", "lib/", "app/")
+    ):
+        return FileCategory.CONFIGURATION
 
     return FileCategory.OTHER
 
