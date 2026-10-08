@@ -93,6 +93,73 @@ class ModuleAnalysis:
 
 
 @dataclass
+class DependencyEdge:
+    """Represents a dependency connection from source file to target module."""
+
+    source: str
+    target: str
+    is_internal: bool
+    line_number: int = 1
+    imported_symbols: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class ModuleNode:
+    """A node in the internal dependency graph."""
+
+    rel_path: str
+    language: str
+    dependencies: list[str] = field(default_factory=list)  # outgoing internal edges
+    dependents: list[str] = field(default_factory=list)    # incoming internal edges
+    external_dependencies: list[str] = field(default_factory=list)  # stdlib / 3rd-party
+    symbol_count: int = 0
+
+    @property
+    def dependency_count(self) -> int:
+        return len(self.dependencies)
+
+    @property
+    def dependent_count(self) -> int:
+        return len(self.dependents)
+
+    @property
+    def connectivity(self) -> int:
+        return self.dependency_count + self.dependent_count
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "rel_path": self.rel_path,
+            "language": self.language,
+            "dependencies": self.dependencies,
+            "dependents": self.dependents,
+            "external_dependencies": self.external_dependencies,
+            "dependency_count": self.dependency_count,
+            "dependent_count": self.dependent_count,
+            "connectivity": self.connectivity,
+            "symbol_count": self.symbol_count,
+        }
+
+
+@dataclass
+class DependencyGraph:
+    """Directed dependency graph across repository modules."""
+
+    nodes: dict[str, ModuleNode] = field(default_factory=dict)
+    edges: list[DependencyEdge] = field(default_factory=list)
+    cycles: list[list[str]] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "nodes": {k: v.to_dict() for k, v in self.nodes.items()},
+            "edges": [e.to_dict() for e in self.edges],
+            "cycles": self.cycles,
+        }
+
+
+@dataclass
 class FileRecord:
     """Represents a discovered file in the repository."""
 
