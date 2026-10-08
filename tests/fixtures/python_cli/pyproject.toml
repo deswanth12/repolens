@@ -1,0 +1,7 @@
+[project]
+name = "mycli"
+version = "0.1.0"
+description = "Fixture CLI app"
+
+[project.scripts]
+mycli = "mycli.main:cli"

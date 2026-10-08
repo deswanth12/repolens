@@ -1,0 +1,12 @@
+{
+  "name": "js-sample-app",
+  "version": "1.0.0",
+  "description": "Sample JS App",
+  "main": "index.js",
+  "bin": {
+    "sample": "./bin/run.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}

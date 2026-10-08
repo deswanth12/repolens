@@ -44,3 +44,13 @@ repolens = "repolens.cli:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["repolens*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = [
+    "fixtures",
+    "tests/fixtures",
+    ".git",
+    ".venv",
+    "node_modules",
+]
