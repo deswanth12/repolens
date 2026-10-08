@@ -85,12 +85,14 @@ class OnboardingPlanner:
 
         # Phase 4: 15-22 min (Domain Models & Entities)
         model_layer = next((l for l in self.layers if "Data" in l.layer_name or "Models" in l.layer_name), None)
-        model_files = model_layer.files[:2] if model_layer else []
+        model_files = [f for f in (model_layer.files if model_layer else []) if not any(x in f for x in ("fixtures", "__pycache__"))][:2]
         if not model_files:
             model_files = [
                 f.rel_path
                 for f in self.files
-                if any(m in Path(f.rel_path).name.lower() for m in ("model", "schema", "type"))
+                if f.category == FileCategory.SOURCE
+                and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+                and any(m in Path(f.rel_path).name.lower() for m in ("model", "schema", "type"))
             ][:2]
         phases.append(
             OnboardingPhase(
@@ -103,12 +105,14 @@ class OnboardingPlanner:
 
         # Phase 5: 22-27 min (Supporting Infrastructure & Utilities)
         util_layer = next((l for l in self.layers if "Utilities" in l.layer_name), None)
-        util_files = util_layer.files[:2] if util_layer else []
+        util_files = [f for f in (util_layer.files if util_layer else []) if not any(x in f for x in ("fixtures", "__pycache__"))][:2]
         if not util_files:
             util_files = [
                 f.rel_path
                 for f in self.files
-                if any(m in Path(f.rel_path).name.lower() for m in ("util", "helper", "ignore", "config"))
+                if f.category == FileCategory.SOURCE
+                and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+                and any(m in Path(f.rel_path).name.lower() for m in ("util", "helper", "ignore", "config", "resolver", "scanner"))
             ][:2]
         phases.append(
             OnboardingPhase(
@@ -120,7 +124,12 @@ class OnboardingPlanner:
         )
 
         # Phase 6: 27-30 min (Tests & Verification)
-        test_files = [f.rel_path for f in self.files if f.category == FileCategory.TEST][:2]
+        test_files = [
+            f.rel_path
+            for f in self.files
+            if f.category == FileCategory.TEST
+            and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+        ][:2]
         phases.append(
             OnboardingPhase(
                 time_window="27-30 min",

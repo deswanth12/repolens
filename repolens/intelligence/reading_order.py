@@ -119,10 +119,24 @@ class ReadingOrderEngine:
             (
                 f.rel_path
                 for f in self.files
-                if f.category == FileCategory.TEST and f.rel_path not in selected_paths
+                if f.category == FileCategory.TEST
+                and f.rel_path not in selected_paths
+                and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+                and any(k in Path(f.rel_path).name.lower() for k in ("cli", "main", "api", "app", "scanner"))
             ),
             None,
         )
+        if not test_file:
+            test_file = next(
+                (
+                    f.rel_path
+                    for f in self.files
+                    if f.category == FileCategory.TEST
+                    and f.rel_path not in selected_paths
+                    and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+                ),
+                None,
+            )
         if test_file:
             add_item(
                 test_file,

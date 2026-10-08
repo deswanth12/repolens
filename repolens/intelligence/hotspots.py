@@ -25,6 +25,10 @@ class HotspotDetector:
         records: list[HotspotRecord] = []
 
         for rel_path, node in self.graph.nodes.items():
+            lower_rel = rel_path.lower()
+            if any(lower_rel.startswith(t) for t in ("tests/", "test/", "fixtures/", "spec/", "__tests__/")):
+                continue
+
             dep_in = node.dependent_count
             dep_out = node.dependency_count
             symbols = node.symbol_count

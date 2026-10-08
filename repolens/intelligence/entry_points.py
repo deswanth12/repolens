@@ -69,6 +69,11 @@ class EntryPointDetector:
 
         # 3. Inspect module AST analysis
         for rel_path, analysis in self.analyses.items():
+            # Exclude test files and fixture folders from application entry points
+            lower_rel = rel_path.lower()
+            if any(lower_rel.startswith(t) for t in ("tests/", "test/", "fixtures/", "spec/", "__tests__/")):
+                continue
+
             entry = get_or_create(rel_path)
             file_name = Path(rel_path).name.lower()
 

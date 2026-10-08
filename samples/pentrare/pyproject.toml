@@ -1,0 +1,7 @@
+[project]
+name = "pentrare"
+version = "0.1.0"
+description = "Pentrare security intelligence engine"
+
+[project.scripts]
+pentrare = "app.main:main"
