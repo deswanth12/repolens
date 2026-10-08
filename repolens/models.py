@@ -21,10 +21,75 @@ class FileCategory(str, Enum):
     OTHER = "other"
 
 
+class SymbolType(str, Enum):
+    FUNCTION = "function"
+    ASYNC_FUNCTION = "async_function"
+    CLASS = "class"
+    METHOD = "method"
+
+
 class Confidence(str, Enum):
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
+
+
+@dataclass
+class SymbolRecord:
+    """Represents a defined symbol (function, class, method)."""
+
+    name: str
+    symbol_type: SymbolType
+    line_number: int
+    end_line_number: int
+    parent_symbol: str | None = None
+    decorators: list[str] = field(default_factory=list)
+    docstring: str | None = None
+    base_classes: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        d = asdict(self)
+        d["symbol_type"] = self.symbol_type.value
+        return d
+
+
+@dataclass
+class ImportRecord:
+    """Represents an imported module or symbol."""
+
+    module: str
+    imported_names: list[str] = field(default_factory=list)
+    alias: str | None = None
+    is_from: bool = False
+    level: int = 0  # 0 for absolute, 1 for '.', 2 for '..', etc.
+    line_number: int = 1
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class ModuleAnalysis:
+    """Analysis results for a single source file."""
+
+    rel_path: str
+    language: str
+    symbols: list[SymbolRecord] = field(default_factory=list)
+    imports: list[ImportRecord] = field(default_factory=list)
+    exports: list[str] = field(default_factory=list)
+    has_main_block: bool = False
+    parse_error: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "rel_path": self.rel_path,
+            "language": self.language,
+            "symbols": [s.to_dict() for s in self.symbols],
+            "imports": [i.to_dict() for i in self.imports],
+            "exports": self.exports,
+            "has_main_block": self.has_main_block,
+            "parse_error": self.parse_error,
+        }
 
 
 @dataclass
