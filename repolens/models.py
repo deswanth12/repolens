@@ -159,6 +159,50 @@ class EntryPointRecord:
 
 
 @dataclass
+class HotspotRecord:
+    """Represents an architecturally significant module based on connectivity and density."""
+
+    rel_path: str
+    dependent_count: int
+    dependency_count: int
+    symbol_count: int
+    connectivity: int
+    reasons: list[str] = field(default_factory=list)
+    interpretation: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class ArchitecturalLayer:
+    """Represents an inferred architectural layer backed by repository evidence."""
+
+    layer_name: str
+    confidence: Confidence
+    files: list[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        d = asdict(self)
+        d["confidence"] = self.confidence.value
+        return d
+
+
+@dataclass
+class ReadingOrderItem:
+    """A recommended step in the repository reading order."""
+
+    order: int
+    rel_path: str
+    category: str
+    purpose: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
 class DependencyGraph:
     """Directed dependency graph across repository modules."""
 
