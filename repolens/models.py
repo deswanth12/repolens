@@ -144,6 +144,21 @@ class ModuleNode:
 
 
 @dataclass
+class EntryPointRecord:
+    """Represents a detected application entry point with evidence."""
+
+    rel_path: str
+    reasons: list[str] = field(default_factory=list)
+    confidence: Confidence = Confidence.MEDIUM
+    category: str = "Application"  # CLI, Web Server, Script, Package Binary
+
+    def to_dict(self) -> dict[str, Any]:
+        d = asdict(self)
+        d["confidence"] = self.confidence.value
+        return d
+
+
+@dataclass
 class DependencyGraph:
     """Directed dependency graph across repository modules."""
 
