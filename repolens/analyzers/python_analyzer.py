@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
-from typing import Any
 
 from repolens.analyzers.base import BaseAnalyzer
 from repolens.models import (
@@ -200,11 +199,14 @@ class PythonAnalyzer(BaseAnalyzer):
             # 5. Exports: __all__ = [...]
             elif isinstance(node, ast.Assign):
                 for target in node.targets:
-                    if isinstance(target, ast.Name) and target.id == "__all__":
-                        if isinstance(node.value, (ast.List, ast.Tuple)):
-                            for elt in node.value.elts:
-                                if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
-                                    exports.append(elt.value)
+                    if (
+                        isinstance(target, ast.Name)
+                        and target.id == "__all__"
+                        and isinstance(node.value, (ast.List, ast.Tuple))
+                    ):
+                        for elt in node.value.elts:
+                            if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                                exports.append(elt.value)
 
         return ModuleAnalysis(
             rel_path=rel_path,

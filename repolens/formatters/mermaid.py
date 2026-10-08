@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+
 from repolens.models import DependencyGraph
 
 
@@ -22,15 +23,13 @@ def to_mermaid(graph: DependencyGraph, max_edges: int = 50) -> str:
         lines.append("    Empty[\"No internal module dependencies detected\"]")
         return "\n".join(lines)
 
-    edge_count = 0
-    for edge in internal_edges:
+    for edge_count, edge in enumerate(internal_edges):
         if edge_count >= max_edges:
             lines.append("    %% ... additional edges truncated for readability")
             break
         src_id = _sanitize_id(edge.source)
         tgt_id = _sanitize_id(edge.target)
         lines.append(f'    {src_id}["{edge.source}"] --> {tgt_id}["{edge.target}"]')
-        edge_count += 1
 
     return "\n".join(lines)
 

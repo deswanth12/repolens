@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+
 from repolens.analyzers.base import BaseAnalyzer
 from repolens.models import FileCategory, FileRecord, ImportRecord, ModuleAnalysis
 

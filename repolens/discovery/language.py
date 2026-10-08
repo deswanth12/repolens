@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+
 from repolens.models import FileCategory
 
 # Extension to language mapping
@@ -127,7 +128,11 @@ def classify_file(rel_path: str, ext: str, language: str) -> FileCategory:
     filename = path_parts[-1]
     name_stem = Path(filename).stem.lower()
 
-    # 1. Tests
+    # 1. Binary files are always OTHER
+    if ext.lower() in BINARY_EXTENSIONS:
+        return FileCategory.OTHER
+
+    # 2. Tests
     if any(part in TEST_DIR_PATTERNS for part in path_parts[:-1]):
         return FileCategory.TEST
     if filename.startswith("test_") or filename.endswith("_test.py"):
@@ -135,7 +140,7 @@ def classify_file(rel_path: str, ext: str, language: str) -> FileCategory:
     if re.search(r"\.(test|spec)\.(js|ts|jsx|tsx)$", filename):
         return FileCategory.TEST
 
-    # 2. Source code (check programming language source files)
+    # 3. Source code (check programming language source files)
     if language in {
         "Python",
         "JavaScript",
@@ -159,15 +164,18 @@ def classify_file(rel_path: str, ext: str, language: str) -> FileCategory:
             return FileCategory.CONFIGURATION
         return FileCategory.SOURCE
 
-    # 3. Documentation
+    # 4. Documentation
     if ext.lower() in {".md", ".rst", ".adoc"}:
         return FileCategory.DOCUMENTATION
     if any(lower_path.startswith(d) for d in ("docs/", "doc/", "documentation/")):
         return FileCategory.DOCUMENTATION
-    if any(name_stem.startswith(doc_stem) for doc_stem in DOC_FILENAMES):
+    if ext.lower() in {".txt", ""} and (
+        name_stem in DOC_FILENAMES
+        or any(name_stem.startswith(f"{stem}_") or name_stem.startswith(f"{stem}-") for stem in DOC_FILENAMES)
+    ):
         return FileCategory.DOCUMENTATION
 
-    # 4. Configuration & Build
+    # 5. Configuration & Build
     if filename.lower() in CONFIG_FILENAMES:
         return FileCategory.CONFIGURATION
     if ext.lower() in {".toml", ".ini", ".cfg", ".yaml", ".yml", ".json"} and not any(

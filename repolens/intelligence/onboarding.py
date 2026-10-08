@@ -7,6 +7,7 @@ specifically to the repository, explaining what a new contributor should underst
 from __future__ import annotations
 
 from pathlib import Path
+
 from repolens.models import (
     ArchitecturalLayer,
     EntryPointRecord,
@@ -46,10 +47,10 @@ class OnboardingPlanner:
         doc_files = [
             f.rel_path
             for f in self.files
-            if Path(f.rel_path).name.lower().startswith(("readme", "contributing"))
+            if not f.is_binary and Path(f.rel_path).name.lower().startswith(("readme", "contributing"))
         ][:2]
         if not doc_files:
-            doc_files = [f.rel_path for f in self.files if f.category == FileCategory.DOCUMENTATION][:1]
+            doc_files = [f.rel_path for f in self.files if not f.is_binary and f.category == FileCategory.DOCUMENTATION][:1]
         phases.append(
             OnboardingPhase(
                 time_window="0-3 min",
@@ -84,7 +85,7 @@ class OnboardingPlanner:
         )
 
         # Phase 4: 15-22 min (Domain Models & Entities)
-        model_layer = next((l for l in self.layers if "Data" in l.layer_name or "Models" in l.layer_name), None)
+        model_layer = next((layer for layer in self.layers if "Data" in layer.layer_name or "Models" in layer.layer_name), None)
         model_files = [f for f in (model_layer.files if model_layer else []) if not any(x in f for x in ("fixtures", "__pycache__"))][:2]
         if not model_files:
             model_files = [
@@ -104,7 +105,7 @@ class OnboardingPlanner:
         )
 
         # Phase 5: 22-27 min (Supporting Infrastructure & Utilities)
-        util_layer = next((l for l in self.layers if "Utilities" in l.layer_name), None)
+        util_layer = next((layer for layer in self.layers if "Utilities" in layer.layer_name), None)
         util_files = [f for f in (util_layer.files if util_layer else []) if not any(x in f for x in ("fixtures", "__pycache__"))][:2]
         if not util_files:
             util_files = [

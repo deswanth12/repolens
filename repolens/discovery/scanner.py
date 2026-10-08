@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import os
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from repolens.discovery.ignore import IgnoreFilter
 from repolens.discovery.language import (
@@ -102,12 +102,12 @@ class RepositoryScanner:
                 ext = file_path.suffix
                 language = detect_language(ext, f)
                 binary = is_binary_file(file_path, ext)
-                category = classify_file(rel_file, ext, language)
+                category = FileCategory.OTHER if binary else classify_file(rel_file, ext, language)
 
                 line_count = 0
                 if not binary and size_bytes <= MAX_LINE_COUNT_SIZE:
                     try:
-                        with open(file_path, "r", encoding="utf-8", errors="replace") as fh:
+                        with open(file_path, encoding="utf-8", errors="replace") as fh:
                             line_count = sum(1 for _ in fh)
                     except Exception as e:
                         warnings.append(f"Could not count lines in {rel_file}: {e}")
@@ -147,7 +147,7 @@ class RepositoryScanner:
 
         # Primary language heuristic: most source lines among known source languages
         source_langs = [
-            l for l in language_stats if l.language not in {"Markdown", "JSON", "YAML", "TOML", "Text", "Config"}
+            stat for stat in language_stats if stat.language not in {"Markdown", "JSON", "YAML", "TOML", "Text", "Config"}
         ]
         if source_langs:
             primary_language = source_langs[0].language

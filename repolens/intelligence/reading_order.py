@@ -7,6 +7,7 @@ build an accurate mental model of an unfamiliar codebase in minimum time.
 from __future__ import annotations
 
 from pathlib import Path
+
 from repolens.models import (
     EntryPointRecord,
     FileCategory,

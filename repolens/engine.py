@@ -6,8 +6,8 @@ graph construction, intelligence deduction, and reporting.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from repolens.analyzers.base import BaseAnalyzer
 from repolens.analyzers.fallback_analyzer import FallbackAnalyzer

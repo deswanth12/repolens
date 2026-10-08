@@ -15,6 +15,7 @@ from repolens.models import (
     FullAnalysisResult,
     HotspotRecord,
     OnboardingPlan,
+    RepositoryScanResult,
 )
 
 console = Console(legacy_windows=False)
@@ -55,8 +56,8 @@ def format_full_report(result: FullAnalysisResult) -> None:
         print_divider()
         console.print("[bold white]INFERRED ARCHITECTURE[/bold white]")
         arch_table = Table(box=None, padding=(0, 2))
-        arch_table.add_column("Layer", style="bold cyan", width=24)
-        arch_table.add_column("Confidence", style="green", width=12)
+        arch_table.add_column("Layer", style="bold cyan")
+        arch_table.add_column("Confidence", style="green")
         arch_table.add_column("Files & Evidence", style="white")
 
         for layer in result.layers:
@@ -73,9 +74,9 @@ def format_full_report(result: FullAnalysisResult) -> None:
         print_divider()
         console.print("[bold white]APPLICATION ENTRY POINTS[/bold white]")
         ep_table = Table(box=None, padding=(0, 2))
-        ep_table.add_column("File", style="cyan", width=30)
-        ep_table.add_column("Category", style="yellow", width=16)
-        ep_table.add_column("Confidence", style="green", width=12)
+        ep_table.add_column("File", style="cyan")
+        ep_table.add_column("Category", style="yellow")
+        ep_table.add_column("Confidence", style="green")
         ep_table.add_column("Evidence", style="white")
 
         for ep in result.entry_points[:4]:
@@ -88,8 +89,8 @@ def format_full_report(result: FullAnalysisResult) -> None:
         print_divider()
         console.print("[bold white]STRUCTURAL HOTSPOTS[/bold white] [dim](High connectivity / Core coordination)[/dim]")
         hs_table = Table(box=None, padding=(0, 2))
-        hs_table.add_column("Module", style="cyan", width=30)
-        hs_table.add_column("Coupling (In/Out)", style="yellow", width=18)
+        hs_table.add_column("Module", style="cyan")
+        hs_table.add_column("Coupling (In/Out)", style="yellow")
         hs_table.add_column("Role / Interpretation", style="white")
 
         for hs in result.hotspots[:5]:
@@ -103,8 +104,8 @@ def format_full_report(result: FullAnalysisResult) -> None:
         console.print("[bold white]RECOMMENDED READING ORDER[/bold white]")
         ro_table = Table(box=None, padding=(0, 2))
         ro_table.add_column("#", style="bold green", width=4)
-        ro_table.add_column("File", style="cyan", width=30)
-        ro_table.add_column("Category", style="yellow", width=16)
+        ro_table.add_column("File", style="cyan")
+        ro_table.add_column("Category", style="yellow")
         ro_table.add_column("Why Read This", style="white")
 
         for ro in result.reading_order:
@@ -230,3 +231,49 @@ def format_file_explanation(rel_path: str, result: FullAnalysisResult) -> None:
             console.print(f"  [yellow]->[/yellow] {dep}")
 
     print_divider()
+
+
+def format_terminal_scan(scan_result: RepositoryScanResult) -> None:
+    """Renders quick repository discovery scan in the terminal."""
+    s = scan_result.summary
+    title = Text()
+    title.append("RepoLens ", style="bold cyan")
+    title.append(f"v{__version__} -- Repository Scan: {s.project_name}", style="dim")
+    console.print(title)
+    print_divider()
+
+    meta_table = Table(show_header=False, box=None, padding=(0, 2))
+    meta_table.add_column("Key", style="bold white", width=24)
+    meta_table.add_column("Value", style="cyan")
+
+    meta_table.add_row("Project:", s.project_name)
+    meta_table.add_row("Root Path:", s.root_path)
+    meta_table.add_row("Primary Language:", s.primary_language)
+    meta_table.add_row("Files (Total / Source):", f"{s.total_files} total / {s.source_files} source")
+    meta_table.add_row("Tests / Docs:", f"{s.test_files} tests / {s.doc_files} docs")
+    meta_table.add_row("Configuration Files:", str(s.config_files))
+    meta_table.add_row("Total Lines:", f"{s.total_lines:,}")
+    meta_table.add_row("Ignored Items:", str(s.ignored_count))
+    console.print(meta_table)
+
+    if s.languages:
+        print_divider()
+        console.print("[bold white]DETECTED LANGUAGES[/bold white]")
+        lang_table = Table(box=None, padding=(0, 2))
+        lang_table.add_column("Language", style="bold cyan")
+        lang_table.add_column("Files", justify="right", style="green")
+        lang_table.add_column("Lines", justify="right", style="yellow")
+        lang_table.add_column("Share", justify="right", style="white")
+
+        for lang in s.languages:
+            lang_table.add_row(lang.language, str(lang.file_count), f"{lang.line_count:,}", f"{lang.percentage:.1f}%")
+        console.print(lang_table)
+
+    if s.warnings:
+        print_divider()
+        console.print(f"[bold yellow]Warnings ({len(s.warnings)}):[/bold yellow]")
+        for w in s.warnings[:5]:
+            console.print(f"  [dim]- {w}[/dim]")
+
+    print_divider()
+

@@ -27,7 +27,17 @@ ENTRYPOINT_FILENAMES = {
     "wsgi.py": ("Web Server", "WSGI application gateway entry point"),
     "asgi.py": ("Web Server", "ASGI asynchronous application gateway entry point"),
     "index.js": ("Application", "Standard JavaScript module entry point"),
+    "index.jsx": ("Frontend UI", "Standard React entry-point filename"),
     "index.ts": ("Application", "Standard TypeScript module entry point"),
+    "index.tsx": ("Frontend UI", "Standard React/TypeScript entry-point filename"),
+    "main.js": ("Application", "Standard JavaScript application entry point"),
+    "main.jsx": ("Frontend UI", "Standard React application entry point"),
+    "main.ts": ("Application", "Standard TypeScript application entry point"),
+    "main.tsx": ("Frontend UI", "Standard React/TypeScript application entry point"),
+    "app.js": ("Application", "Standard JavaScript application root"),
+    "app.jsx": ("Frontend UI", "Standard React application root component"),
+    "app.ts": ("Application", "Standard TypeScript application root"),
+    "app.tsx": ("Frontend UI", "Standard React/TypeScript application root component"),
     "server.js": ("Server", "Node.js server entry point"),
     "server.ts": ("Server", "TypeScript server entry point"),
 }
@@ -70,8 +80,11 @@ class EntryPointDetector:
         # 3. Inspect module AST analysis
         for rel_path, analysis in self.analyses.items():
             # Exclude test files and fixture folders from application entry points
-            lower_rel = rel_path.lower()
-            if any(lower_rel.startswith(t) for t in ("tests/", "test/", "fixtures/", "spec/", "__tests__/")):
+            lower_rel = rel_path.lower().replace("\\", "/")
+            parts = lower_rel.split("/")
+            if any(p in {"tests", "test", "fixtures", "spec", "specs", "__tests__"} for p in parts[:-1]):
+                continue
+            if parts[-1].startswith("test_") or parts[-1].endswith("_test.py"):
                 continue
 
             entry = get_or_create(rel_path)
@@ -105,6 +118,12 @@ class EntryPointDetector:
                 entry["reasons"].append(f"{reason} ({file_name}).")
                 if entry["category"] == "Application":
                     entry["category"] = cat
+                if entry["confidence"] == Confidence.LOW:
+                    entry["confidence"] = Confidence.MEDIUM
+            elif (file_name.startswith("main_") or file_name.startswith("app_")) and file_name.endswith(
+                (".py", ".js", ".jsx", ".ts", ".tsx")
+            ):
+                entry["reasons"].append(f"Filename matches application entry-point prefix convention ({file_name}).")
                 if entry["confidence"] == Confidence.LOW:
                     entry["confidence"] = Confidence.MEDIUM
 

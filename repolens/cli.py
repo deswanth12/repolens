@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+
 import click
 from rich.console import Console
 
@@ -193,7 +194,7 @@ def run_quick_scan(path: str, json_output: bool) -> None:
     if json_output:
         click.echo(json.dumps(result.to_dict(), indent=2))
     else:
-        from repolens.cli import format_terminal_scan
+        from repolens.formatters import format_terminal_scan
         format_terminal_scan(result)
 
 

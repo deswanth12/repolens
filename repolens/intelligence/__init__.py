@@ -5,9 +5,9 @@ from repolens.intelligence.onboarding import OnboardingPlanner
 from repolens.intelligence.reading_order import ReadingOrderEngine
 
 __all__ = [
+    "ArchitectureInferer",
     "EntryPointDetector",
     "HotspotDetector",
-    "ArchitectureInferer",
-    "ReadingOrderEngine",
     "OnboardingPlanner",
+    "ReadingOrderEngine",
 ]

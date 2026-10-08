@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from pathlib import Path
 from typing import Any
 
 
@@ -250,7 +249,7 @@ class FullAnalysisResult:
             "entry_points": [ep.to_dict() for ep in self.entry_points],
             "reading_order": [ro.to_dict() for ro in self.reading_order],
             "hotspots": [h.to_dict() for h in self.hotspots],
-            "architecture": [l.to_dict() for l in self.layers],
+            "architecture": [layer.to_dict() for layer in self.layers],
             "onboarding": self.onboarding.to_dict(),
             "graph": self.graph.to_dict(),
             "files": [f.to_dict() for f in self.scan.files],

@@ -7,6 +7,7 @@ or classifies them as external/standard-library dependencies.
 from __future__ import annotations
 
 from pathlib import Path
+
 from repolens.models import ImportRecord
 
 

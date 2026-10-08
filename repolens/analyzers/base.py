@@ -15,14 +15,11 @@ class BaseAnalyzer(ABC):
     @abstractmethod
     def language_name(self) -> str:
         """Name of the programming language handled by this analyzer."""
-        pass
 
     @abstractmethod
     def can_analyze(self, file_record: FileRecord) -> bool:
         """Determines if this analyzer can process the given file."""
-        pass
 
     @abstractmethod
     def analyze(self, file_path: Path, rel_path: str) -> ModuleAnalysis:
         """Parses the file and extracts symbols, imports, and module metadata."""
-        pass

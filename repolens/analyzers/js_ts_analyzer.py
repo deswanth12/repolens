@@ -38,6 +38,15 @@ def _clean_quotes(text: str) -> str:
     return text.strip("'\"`")
 
 
+def _node_text(node: Any) -> str:
+    """Safely extracts UTF-8 string from a tree-sitter node."""
+    if node is not None and getattr(node, "text", None) is not None:
+        raw = node.text
+        if isinstance(raw, bytes):
+            return raw.decode("utf-8", errors="replace")
+    return ""
+
+
 class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
     """Analyzes JavaScript and TypeScript files."""
 
@@ -67,7 +76,7 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
         if TREE_SITTER_AVAILABLE:
             try:
                 return self._analyze_with_tree_sitter(content, file_path.suffix, rel_path, lang)
-            except Exception as e:
+            except Exception:
                 # Fallback to regex analysis if AST walk encounters unexpected error
                 pass
 
@@ -107,16 +116,15 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
                     elif child.type == "import_clause":
                         for clause_child in child.children:
                             if clause_child.type == "identifier":
-                                imported_names.append(clause_child.text.decode("utf-8", errors="replace"))
+                                imported_names.append(_node_text(clause_child))
                             elif clause_child.type == "named_imports":
                                 for spec in clause_child.children:
                                     if spec.type == "import_specifier":
                                         name = spec.child_by_field_name("name") or spec.children[0]
-                                        imported_names.append(name.text.decode("utf-8", errors="replace"))
+                                        imported_names.append(_node_text(name))
 
                 if source_node:
-                    module_name = _clean_quotes(source_node.text.decode("utf-8", errors="replace"))
-                    is_rel = module_name.startswith((".", "/"))
+                    module_name = _clean_quotes(_node_text(source_node))
                     level = 1 if module_name.startswith("./") else (2 if module_name.startswith("../") else 0)
                     imports.append(
                         ImportRecord(
@@ -134,7 +142,7 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
                     if child.type == "function_declaration":
                         name_node = child.child_by_field_name("name")
                         if name_node:
-                            fname = name_node.text.decode("utf-8", errors="replace")
+                            fname = _node_text(name_node)
                             exports.append(fname)
                             symbols.append(
                                 SymbolRecord(
@@ -147,7 +155,7 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
                     elif child.type == "class_declaration":
                         name_node = child.child_by_field_name("name")
                         if name_node:
-                            cname = name_node.text.decode("utf-8", errors="replace")
+                            cname = _node_text(name_node)
                             exports.append(cname)
                             symbols.append(
                                 SymbolRecord(
@@ -161,13 +169,13 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
                         for spec in child.children:
                             if spec.type == "export_specifier":
                                 name = spec.child_by_field_name("name") or spec.children[0]
-                                exports.append(name.text.decode("utf-8", errors="replace"))
+                                exports.append(_node_text(name))
 
             # 3. Functions
             elif node_type == "function_declaration":
                 name_node = node.child_by_field_name("name")
                 if name_node:
-                    fname = name_node.text.decode("utf-8", errors="replace")
+                    fname = _node_text(name_node)
                     is_async = any(c.type == "async" for c in node.children)
                     symbols.append(
                         SymbolRecord(
@@ -182,11 +190,11 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
             elif node_type == "class_declaration":
                 name_node = node.child_by_field_name("name")
                 if name_node:
-                    cname = name_node.text.decode("utf-8", errors="replace")
+                    cname = _node_text(name_node)
                     bases: list[str] = []
                     heritage = node.child_by_field_name("heritage")
                     if heritage:
-                        bases.append(heritage.text.decode("utf-8", errors="replace"))
+                        bases.append(_node_text(heritage))
 
                     symbols.append(
                         SymbolRecord(
@@ -204,7 +212,7 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
                             if item.type == "method_definition":
                                 mname_node = item.child_by_field_name("name")
                                 if mname_node:
-                                    mname = mname_node.text.decode("utf-8", errors="replace")
+                                    mname = _node_text(mname_node)
                                     symbols.append(
                                         SymbolRecord(
                                             name=mname,
@@ -216,11 +224,7 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
                                     )
 
         # Check for server or CLI execution patterns in text
-        if re.search(r"\b(app|server)\.listen\(", content):
-            has_main_block = True
-        elif re.search(r"require\.main\s*===\s*module", content):
-            has_main_block = True
-        elif re.search(r"\bprogram\.parse\(", content):
+        if re.search(r"\b(app|server)\.listen\(", content) or re.search(r"require\.main\s*===\s*module", content) or re.search(r"\bprogram\.parse\(", content):
             has_main_block = True
 
         return ModuleAnalysis(

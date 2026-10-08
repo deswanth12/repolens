@@ -6,8 +6,8 @@ from repolens.discovery.scanner import RepositoryScanner
 
 __all__ = [
     "IgnoreFilter",
-    "detect_language",
-    "classify_file",
-    "is_binary_file",
     "RepositoryScanner",
+    "classify_file",
+    "detect_language",
+    "is_binary_file",
 ]

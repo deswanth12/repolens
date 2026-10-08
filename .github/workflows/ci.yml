@@ -31,6 +31,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      - name: Run Ruff linter
+        run: |
+          ruff check repolens/
+
+      - name: Run Mypy type checker
+        run: |
+          mypy repolens/
+
       - name: Run test suite
         run: |
           pytest -v

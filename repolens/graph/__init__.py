@@ -4,7 +4,7 @@ from repolens.graph.builder import DependencyGraphBuilder, find_cycles
 from repolens.graph.resolver import ImportResolver
 
 __all__ = [
-    "ImportResolver",
     "DependencyGraphBuilder",
+    "ImportResolver",
     "find_cycles",
 ]

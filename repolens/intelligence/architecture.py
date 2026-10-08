@@ -7,6 +7,7 @@ framework imports, and dependency caller relationships. Always provides supporti
 from __future__ import annotations
 
 from pathlib import Path
+
 from repolens.models import (
     ArchitecturalLayer,
     Confidence,
@@ -80,6 +81,11 @@ class ArchitectureInferer:
         layer_results: list[ArchitecturalLayer] = []
 
         for rule in LAYER_RULES:
+            rule_name = str(rule["name"])
+            rule_dirs: set[str] = set(rule["dirs"])
+            rule_files: set[str] = set(rule["files"])
+            rule_frameworks: set[str] = set(rule["frameworks"])
+
             matched_files: list[str] = []
             evidence_points: list[str] = []
 
@@ -88,8 +94,8 @@ class ArchitectureInferer:
                 parts = set(Path(f.rel_path).parts[:-1])
                 filename = Path(f.rel_path).name.lower()
 
-                dir_match = bool(parts & rule["dirs"])
-                file_match = filename in rule["files"]
+                dir_match = bool(parts & rule_dirs)
+                file_match = filename in rule_files
 
                 if dir_match:
                     matched_files.append(f.rel_path)
@@ -99,17 +105,17 @@ class ArchitectureInferer:
                     evidence_points.append(f"Filename matches standard '{filename}' convention.")
 
             # 2. Match framework imports
-            if rule["frameworks"]:
+            if rule_frameworks:
                 for rel_path, analysis in self.analyses.items():
                     for imp in analysis.imports:
                         top_pkg = imp.module.split(".")[0].lower()
-                        if top_pkg in rule["frameworks"]:
+                        if top_pkg in rule_frameworks:
                             if rel_path not in matched_files:
                                 matched_files.append(rel_path)
                             evidence_points.append(f"Imports framework '{top_pkg}' in {rel_path}.")
 
             # 3. Categorize tests specifically
-            if rule["name"] == "Tests":
+            if rule_name == "Tests":
                 for f in self.files:
                     if f.category == FileCategory.TEST and f.rel_path not in matched_files:
                         matched_files.append(f.rel_path)
@@ -131,7 +137,7 @@ class ArchitectureInferer:
 
                 layer_results.append(
                     ArchitecturalLayer(
-                        layer_name=rule["name"],
+                        layer_name=rule_name,
                         confidence=confidence,
                         files=unique_files,
                         evidence=unique_evidence,

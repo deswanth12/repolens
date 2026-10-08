@@ -5,7 +5,7 @@ from repolens.analyzers.python_analyzer import PythonAnalyzer
 
 __all__ = [
     "BaseAnalyzer",
-    "PythonAnalyzer",
-    "JavaScriptTypeScriptAnalyzer",
     "FallbackAnalyzer",
+    "JavaScriptTypeScriptAnalyzer",
+    "PythonAnalyzer",
 ]
