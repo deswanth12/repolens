@@ -203,6 +203,35 @@ class ReadingOrderItem:
 
 
 @dataclass
+class OnboardingPhase:
+    """A timed phase in the 30-minute contributor onboarding walkthrough."""
+
+    time_window: str  # e.g., "0-3 min"
+    focus: str        # e.g., "Project Vision & Scope"
+    target_files: list[str]
+    takeaway: str     # What you should understand after completing this step
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class OnboardingPlan:
+    """Complete 30-minute contributor onboarding blueprint."""
+
+    project_name: str
+    phases: list[OnboardingPhase] = field(default_factory=list)
+    summary_notes: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "project_name": self.project_name,
+            "phases": [p.to_dict() for p in self.phases],
+            "summary_notes": self.summary_notes,
+        }
+
+
+@dataclass
 class DependencyGraph:
     """Directed dependency graph across repository modules."""
 
