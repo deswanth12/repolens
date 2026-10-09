@@ -18,7 +18,7 @@ RepoLens is written in Python 3.10+ and requires minimal dependencies:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/repolens/repolens.git
+git clone https://github.com/deswanth12/repolens.git
 cd repolens
 
 # 2. Create and activate a virtual environment

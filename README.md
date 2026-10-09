@@ -62,8 +62,16 @@ Existing tools either:
 
 ### Installation
 
+Choose any of the following installation methods:
+
 ```bash
-# Clone and install locally
+# Option 1: Direct install from official GitHub release wheel
+pip install https://github.com/deswanth12/repolens/releases/download/v0.1.0/repolens-0.1.0-py3-none-any.whl
+
+# Option 2: Install directly from GitHub
+pip install git+https://github.com/deswanth12/repolens.git
+
+# Option 3: Clone and install locally in editable mode
 git clone https://github.com/deswanth12/repolens.git
 cd repolens
 pip install -e .
@@ -88,46 +96,47 @@ repolens path/to/project
 ```text
 RepoLens v0.1.0 -- Understand how a codebase works
 ------------------------------------------------------------
-  Project:              DevIntel
-  Root Path:            C:\DevIntel
-  Primary Language:     Python
-  Files (Total/Source): 28 total / 18 source
-  Tests / Docs:         11 tests / 5 docs
-  Total Lines:          4,120
-  Entry Points:         1
+  Project:                repolens
+  Root Path:              /path/to/repolens
+  Primary Language:       Python
+  Files (Total / Source): 94 total / 30 source
+  Tests / Docs:           44 tests / 14 docs
+  Total Lines:            6,145
+  Entry Points:           1
 ------------------------------------------------------------
 INFERRED ARCHITECTURE
-  Layer                 Confidence    Files & Evidence
-  CLI / Interface       HIGH          repolens/cli.py
-                                      Configured as console script 'repolens'
-  Data Access / Storage MEDIUM        repolens/models.py
-                                      Filename matches standard 'models.py'
-  Services / Logic      HIGH          repolens/engine.py
-                                      Central workflow orchestrator
-  Tests                 HIGH          tests/test_cli.py (+10 more)
-                                      Directory matches 'tests' pattern
+  Layer                    Confidence    Files & Evidence
+  CLI / Interface          MEDIUM        repolens/cli.py
+                                         Filename matches standard 'cli.py' convention.
+  Data Access / Storage    LOW           repolens/models.py
+                                         Filename matches standard 'models.py' convention.
+  Configuration            LOW           pyproject.toml
+                                         Filename matches standard 'pyproject.toml' convention.
+  Tests                    HIGH          tests/__init__.py, tests/test_architecture.py (+11 more)
+                                         Directory matches 'tests' pattern.
 ------------------------------------------------------------
 APPLICATION ENTRY POINTS
   File                  Category      Confidence    Evidence
   repolens/cli.py       CLI           HIGH          Configured as console script 'repolens' in pyproject.toml
 ------------------------------------------------------------
 STRUCTURAL HOTSPOTS (High connectivity / Core coordination)
-  Module                Coupling                    Role / Interpretation
-  repolens/models.py    24 callers / 0 imports      Foundational module: heavily relied upon across codebase
-  repolens/engine.py    1 callers / 11 imports      Orchestrator: aggregates multiple internal subsystems
-  repolens/scanner.py   4 callers / 3 imports       Structural nexus: high two-way coordination point
+  Module                          Coupling (In/Out)         Role / Interpretation
+  repolens/models.py              26 callers / 0 imports    Foundational module: heavily relied upon across codebase
+  repolens/engine.py              3 callers / 12 imports    Orchestrator: aggregates multiple internal subsystems
+  repolens/discovery/language.py   9 callers / 1 imports     Foundational module: heavily relied upon across codebase
+  repolens/discovery/scanner.py    4 callers / 3 imports     Structural nexus: high two-way connectivity
 ------------------------------------------------------------
 RECOMMENDED READING ORDER
-  #   File                     Category        Why Read This
-  1   README.md                Documentation   Understand project purpose, scope, and user design.
-  2   pyproject.toml           Configuration   Inspect dependencies and runnable entry points.
-  3   repolens/cli.py          Entry Point     Application starting point (CLI); trace execution wiring.
-  4   repolens/models.py       Core Component  Foundational module containing core data representations.
-  5   repolens/engine.py       Core Component  Orchestrator aggregating subsystems.
-  6   tests/test_cli.py        Verification    Observe expected behavior, arguments, and test contracts.
+  #   File                  Category        Why Read This
+  1   README.md             Documentation   Understand the project's purpose, scope, and user-facing design.
+  2   pyproject.toml        Configuration   Inspect declared dependencies, build configuration, and runnable entry points.
+  3   repolens/cli.py       Entry Point     Application starting point (CLI); trace execution kickoff and wiring.
+  4   repolens/models.py    Core Component  Foundational module: heavily relied upon by other modules.
+  5   repolens/engine.py    Core Component  Orchestrator: aggregates multiple internal subsystems.
+  6   tests/test_cli.py     Verification    Observe expected inputs, outputs, error conditions, and test contracts.
 ------------------------------------------------------------
 NEXT FILE TO READ: README.md
-Understand project purpose, scope, and user design.
+Understand the project's purpose, scope, and user-facing design.
 ------------------------------------------------------------
 ```
 
@@ -156,29 +165,34 @@ repolens onboard .
 ```
 
 ```text
+RepoLens v0.1.0 -- Contributor Onboarding: repolens
+------------------------------------------------------------
+YOUR FIRST 30 MINUTES
+A structured, time-boxed roadmap to build a working mental model.
+
 [0-3 min] Project Vision & Problem Statement
-  Files to open: README.md
-  What to understand: Understand why this project exists and its primary value proposition.
+  Files to open: CONTRIBUTING.md, README.md
+  What to understand: Understand why this project exists, who uses it, and its primary value proposition.
 
 [3-7 min] Application Entry Point & Bootstrap
   Files to open: repolens/cli.py
-  What to understand: Understand where execution starts and how command dispatch is initialized.
+  What to understand: Understand where execution starts, how arguments or configurations are parsed, and how the core coordinator is initialized.
 
 [7-15 min] Core Workflow & Orchestration
-  Files to open: repolens/engine.py
-  What to understand: Understand the primary execution lifecycle and how tasks are coordinated.
+  Files to open: repolens/models.py, repolens/engine.py
+  What to understand: Understand the primary execution lifecycle, how data enters the pipeline, and how tasks are coordinated.
 
 [15-22 min] Domain Models & Core Entities
   Files to open: repolens/models.py
-  What to understand: Understand primary data representations, contracts, and state structures.
+  What to understand: Understand the primary data representations, contracts, and internal state structures.
 
 [22-27 min] Supporting Infrastructure & Utilities
-  Files to open: repolens/discovery/scanner.py, repolens/graph/resolver.py
-  What to understand: Understand foundational helper logic and import resolution.
+  Files to open: repolens/discovery/ignore.py, repolens/discovery/scanner.py
+  What to understand: Understand foundational helper logic, external service adapters, and configuration loaders.
 
 [27-30 min] Test Contracts & Behavior Verification
-  Files to open: tests/test_security.py, tests/test_cli.py
-  What to understand: Understand how behaviors are verified and how to write a test before opening a PR.
+  Files to open: tests/test_architecture.py, tests/test_cli.py
+  What to understand: Understand how behaviors are verified, how to run tests locally, and how to write a test before opening a PR.
 ```
 
 ---
@@ -204,12 +218,43 @@ repolens onboard .
 
 ---
 
+## Troubleshooting & FAQ
+
+### How do I ignore build artifacts, vendor directories, or minified files?
+RepoLens automatically respects `.gitignore` rules in the repository root. To ignore additional paths or glob patterns, use the `-i` / `--ignore` flag (repeatable):
+```bash
+repolens . -i "build/**" -i "dist/**" -i "*.min.js"
+```
+To ignore `.gitignore` rules and scan everything, pass `--no-gitignore`.
+
+### Can I analyze a subproject within a monorepo?
+Yes. Point RepoLens directly to any subdirectory:
+```bash
+repolens packages/backend
+repolens onboard packages/backend
+```
+
+### How does RepoLens handle large files and binaries?
+- Files larger than **2 MB** are automatically skipped for AST parsing to prevent high memory usage.
+- Binary files and non-text assets are detected via null-byte inspection and skipped cleanly.
+- Analysis runs entirely in memory without creating temporary cache files in your repository.
+
+### What happens on languages other than Python, JavaScript, and TypeScript?
+For languages without dedicated AST parsers (such as Go, Rust, Java, C++, C#), RepoLens performs structural filesystem discovery, line counting, and regex-based import extraction, accompanied by the notice:
+`"Structural analysis is limited for this language."`
+
+### Can I run RepoLens in air-gapped or offline CI environments?
+Yes. RepoLens initiates zero external network calls, zero telemetry, and zero LLM API requests. It is safe for private and air-gapped repositories.
+
+---
+
 ## Documentation
 
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [Competitive Research](docs/COMPETITIVE_RESEARCH.md)
 - [Known Limitations](docs/LIMITATIONS.md)
 - [Project Roadmap](docs/ROADMAP.md)
+- [Launch & Feedback Kit](docs/LAUNCH_KIT.md)
 - [Security Policy](SECURITY.md)
 - [Contributing Guide](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
