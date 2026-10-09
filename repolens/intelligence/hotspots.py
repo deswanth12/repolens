@@ -6,15 +6,14 @@ and symbol density. Treats connectivity as structural significance, not defect s
 
 from __future__ import annotations
 
+from repolens.discovery.language import is_auxiliary_path
 from repolens.models import DependencyGraph, HotspotRecord, ModuleAnalysis
 
 
 def _is_test_file(path: str) -> bool:
-    lower_rel = path.lower().replace("\\", "/")
-    parts = lower_rel.split("/")
-    if any(p in {"tests", "test", "fixtures", "spec", "specs", "__tests__"} for p in parts[:-1]):
+    if is_auxiliary_path(path):
         return True
-    filename = parts[-1]
+    filename = path.lower().replace("\\", "/").split("/")[-1]
     return (
         filename.startswith("test_")
         or filename.endswith("_test.py")

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from repolens.discovery.language import is_auxiliary_path, is_sample_or_fixture_path
 from repolens.models import (
     ArchitecturalLayer,
     EntryPointRecord,
@@ -44,13 +45,30 @@ class OnboardingPlanner:
         phases: list[OnboardingPhase] = []
 
         # Phase 1: 0-3 min (Documentation)
-        doc_files = [
+        root_docs = [
             f.rel_path
             for f in self.files
-            if not f.is_binary and Path(f.rel_path).name.lower().startswith(("readme", "contributing"))
-        ][:2]
+            if not f.is_binary
+            and Path(f.rel_path).parent.as_posix() == "."
+            and Path(f.rel_path).name.lower().startswith(("readme", "contributing"))
+        ]
+        doc_files = root_docs[:2]
         if not doc_files:
-            doc_files = [f.rel_path for f in self.files if not f.is_binary and f.category == FileCategory.DOCUMENTATION][:1]
+            doc_files = [
+                f.rel_path
+                for f in self.files
+                if not f.is_binary
+                and not is_auxiliary_path(f.rel_path)
+                and Path(f.rel_path).name.lower().startswith(("readme", "contributing"))
+            ][:2]
+        if not doc_files:
+            doc_files = [
+                f.rel_path
+                for f in self.files
+                if not f.is_binary
+                and not is_auxiliary_path(f.rel_path)
+                and f.category == FileCategory.DOCUMENTATION
+            ][:1]
         phases.append(
             OnboardingPhase(
                 time_window="0-3 min",
@@ -86,13 +104,13 @@ class OnboardingPlanner:
 
         # Phase 4: 15-22 min (Domain Models & Entities)
         model_layer = next((layer for layer in self.layers if "Data" in layer.layer_name or "Models" in layer.layer_name), None)
-        model_files = [f for f in (model_layer.files if model_layer else []) if not any(x in f for x in ("fixtures", "__pycache__"))][:2]
+        model_files = [f for f in (model_layer.files if model_layer else []) if not is_auxiliary_path(f)][:2]
         if not model_files:
             model_files = [
                 f.rel_path
                 for f in self.files
                 if f.category == FileCategory.SOURCE
-                and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+                and not is_auxiliary_path(f.rel_path)
                 and any(m in Path(f.rel_path).name.lower() for m in ("model", "schema", "type"))
             ][:2]
         phases.append(
@@ -106,13 +124,13 @@ class OnboardingPlanner:
 
         # Phase 5: 22-27 min (Supporting Infrastructure & Utilities)
         util_layer = next((layer for layer in self.layers if "Utilities" in layer.layer_name), None)
-        util_files = [f for f in (util_layer.files if util_layer else []) if not any(x in f for x in ("fixtures", "__pycache__"))][:2]
+        util_files = [f for f in (util_layer.files if util_layer else []) if not is_auxiliary_path(f)][:2]
         if not util_files:
             util_files = [
                 f.rel_path
                 for f in self.files
                 if f.category == FileCategory.SOURCE
-                and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+                and not is_auxiliary_path(f.rel_path)
                 and any(m in Path(f.rel_path).name.lower() for m in ("util", "helper", "ignore", "config", "resolver", "scanner"))
             ][:2]
         phases.append(
@@ -129,7 +147,7 @@ class OnboardingPlanner:
             f.rel_path
             for f in self.files
             if f.category == FileCategory.TEST
-            and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+            and not is_sample_or_fixture_path(f.rel_path)
         ][:2]
         phases.append(
             OnboardingPhase(

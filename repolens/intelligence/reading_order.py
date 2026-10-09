@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from repolens.discovery.language import is_auxiliary_path, is_sample_or_fixture_path
 from repolens.models import (
     EntryPointRecord,
     FileCategory,
@@ -49,8 +50,22 @@ class ReadingOrderEngine:
             )
 
         # 1. Primary Documentation (README)
-        readme = next(
-            (f.rel_path for f in self.files if Path(f.rel_path).name.lower().startswith("readme")),
+        root_readme = next(
+            (
+                f.rel_path
+                for f in self.files
+                if Path(f.rel_path).parent.as_posix() == "."
+                and Path(f.rel_path).name.lower().startswith("readme")
+            ),
+            None,
+        )
+        readme = root_readme or next(
+            (
+                f.rel_path
+                for f in self.files
+                if not is_auxiliary_path(f.rel_path)
+                and Path(f.rel_path).name.lower().startswith("readme")
+            ),
             None,
         )
         if readme:
@@ -61,11 +76,21 @@ class ReadingOrderEngine:
             )
 
         # 2. Project Manifest (pyproject.toml / package.json)
-        manifest = next(
+        root_manifest = next(
             (
                 f.rel_path
                 for f in self.files
-                if Path(f.rel_path).name.lower() in {"pyproject.toml", "package.json", "setup.py", "cargo.toml"}
+                if Path(f.rel_path).parent.as_posix() == "."
+                and Path(f.rel_path).name.lower() in {"pyproject.toml", "package.json", "setup.py", "cargo.toml"}
+            ),
+            None,
+        )
+        manifest = root_manifest or next(
+            (
+                f.rel_path
+                for f in self.files
+                if not is_auxiliary_path(f.rel_path)
+                and Path(f.rel_path).name.lower() in {"pyproject.toml", "package.json", "setup.py", "cargo.toml"}
             ),
             None,
         )
@@ -103,6 +128,7 @@ class ReadingOrderEngine:
                 f.rel_path
                 for f in self.files
                 if f.category == FileCategory.SOURCE
+                and not is_auxiliary_path(f.rel_path)
                 and any(m in Path(f.rel_path).name.lower() for m in ("model", "schema", "types", "entity"))
                 and f.rel_path not in selected_paths
             ),
@@ -122,7 +148,7 @@ class ReadingOrderEngine:
                 for f in self.files
                 if f.category == FileCategory.TEST
                 and f.rel_path not in selected_paths
-                and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+                and not is_sample_or_fixture_path(f.rel_path)
                 and any(k in Path(f.rel_path).name.lower() for k in ("cli", "main", "api", "app", "scanner"))
             ),
             None,
@@ -134,7 +160,7 @@ class ReadingOrderEngine:
                     for f in self.files
                     if f.category == FileCategory.TEST
                     and f.rel_path not in selected_paths
-                    and not any(x in f.rel_path for x in ("fixtures", "__pycache__"))
+                    and not is_sample_or_fixture_path(f.rel_path)
                 ),
                 None,
             )

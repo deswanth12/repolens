@@ -122,3 +122,33 @@ def test_entry_point_dunder_main(tmp_path: Path):
     assert results[0].rel_path == "pkg/__main__.py"
     assert results[0].category == "Package Execution"
     assert any("python -m" in r for r in results[0].reasons)
+
+
+def test_entry_point_excludes_samples_and_fixtures(tmp_path: Path):
+    analyses = {
+        "src/app.py": ModuleAnalysis(
+            rel_path="src/app.py",
+            language="Python",
+            has_main_block=True,
+            symbols=[],
+        ),
+        "samples/pentrare/app/main.py": ModuleAnalysis(
+            rel_path="samples/pentrare/app/main.py",
+            language="Python",
+            has_main_block=True,
+            symbols=[],
+        ),
+        "tests/fixtures/test_app/main.py": ModuleAnalysis(
+            rel_path="tests/fixtures/test_app/main.py",
+            language="Python",
+            has_main_block=True,
+            symbols=[],
+        ),
+    }
+
+    detector = EntryPointDetector(tmp_path, analyses)
+    results = detector.detect()
+
+    assert len(results) == 1
+    assert results[0].rel_path == "src/app.py"
+

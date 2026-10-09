@@ -109,6 +109,31 @@ DOC_FILENAMES = {
 }
 
 TEST_DIR_PATTERNS = {"test", "tests", "spec", "specs", "__tests__"}
+SAMPLE_FIXTURE_DIR_PATTERNS = {
+    "samples",
+    "sample",
+    "examples",
+    "example",
+    "fixtures",
+    "fixture",
+    "mock",
+    "mocks",
+}
+AUXILIARY_DIR_PATTERNS = TEST_DIR_PATTERNS | SAMPLE_FIXTURE_DIR_PATTERNS
+
+
+def is_auxiliary_path(rel_path: str) -> bool:
+    """Returns True if the file path is within a test, fixture, sample, or example directory."""
+    lower_rel = rel_path.lower().replace("\\", "/")
+    parts = lower_rel.split("/")
+    return any(p in AUXILIARY_DIR_PATTERNS for p in parts[:-1])
+
+
+def is_sample_or_fixture_path(rel_path: str) -> bool:
+    """Returns True if the file path is within a sample, example, or test fixture directory."""
+    lower_rel = rel_path.lower().replace("\\", "/")
+    parts = lower_rel.split("/")
+    return any(p in SAMPLE_FIXTURE_DIR_PATTERNS for p in parts[:-1])
 
 
 def detect_language(ext: str, filename: str) -> str:

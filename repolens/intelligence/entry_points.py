@@ -16,6 +16,7 @@ try:
 except ImportError:
     tomllib = None  # type: ignore
 
+from repolens.discovery.language import is_auxiliary_path
 from repolens.models import Confidence, EntryPointRecord, ModuleAnalysis
 
 ENTRYPOINT_FILENAMES = {
@@ -80,16 +81,14 @@ class EntryPointDetector:
 
         # 3. Inspect module AST analysis
         for rel_path, analysis in self.analyses.items():
-            # Exclude test files and fixture folders from application entry points
-            lower_rel = rel_path.lower().replace("\\", "/")
-            parts = lower_rel.split("/")
-            if any(p in {"tests", "test", "fixtures", "spec", "specs", "__tests__"} for p in parts[:-1]):
+            # Exclude test files, sample projects, and fixture folders from host entry points
+            if is_auxiliary_path(rel_path):
                 continue
-            if parts[-1].startswith("test_") or parts[-1].endswith("_test.py"):
+            file_name = Path(rel_path).name.lower()
+            if file_name.startswith("test_") or file_name.endswith("_test.py"):
                 continue
 
             entry = get_or_create(rel_path)
-            file_name = Path(rel_path).name.lower()
 
             # Signal A: Contains __main__ guard
             if analysis.has_main_block:

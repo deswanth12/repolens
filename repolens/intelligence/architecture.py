@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from repolens.discovery.language import is_auxiliary_path, is_sample_or_fixture_path
 from repolens.models import (
     ArchitecturalLayer,
     Confidence,
@@ -91,6 +92,11 @@ class ArchitectureInferer:
 
             # 1. Match files by directory or filename
             for f in self.files:
+                if rule_name != "Tests" and is_auxiliary_path(f.rel_path):
+                    continue
+                if rule_name == "Tests" and is_sample_or_fixture_path(f.rel_path):
+                    continue
+
                 parts = set(Path(f.rel_path).parts[:-1])
                 filename = Path(f.rel_path).name.lower()
 
@@ -107,6 +113,10 @@ class ArchitectureInferer:
             # 2. Match framework imports
             if rule_frameworks:
                 for rel_path, analysis in self.analyses.items():
+                    if rule_name != "Tests" and is_auxiliary_path(rel_path):
+                        continue
+                    if rule_name == "Tests" and is_sample_or_fixture_path(rel_path):
+                        continue
                     for imp in analysis.imports:
                         top_pkg = imp.module.split(".")[0].lower()
                         if top_pkg in rule_frameworks:
@@ -117,6 +127,8 @@ class ArchitectureInferer:
             # 3. Categorize tests specifically
             if rule_name == "Tests":
                 for f in self.files:
+                    if is_sample_or_fixture_path(f.rel_path):
+                        continue
                     if f.category == FileCategory.TEST and f.rel_path not in matched_files:
                         matched_files.append(f.rel_path)
                         evidence_points.append(f"Classified test file: {f.rel_path}")

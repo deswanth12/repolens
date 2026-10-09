@@ -61,3 +61,35 @@ def test_reading_order_generation():
 
     # Test file should be included towards the end
     assert any(item.rel_path == "tests/test_main.py" for item in reading_list)
+
+
+def test_reading_order_excludes_samples_and_fixtures():
+    files = [
+        FileRecord("README.md", ".md", "Markdown", FileCategory.DOCUMENTATION, 500),
+        FileRecord("samples/demo/README.md", ".md", "Markdown", FileCategory.DOCUMENTATION, 50),
+        FileRecord("pyproject.toml", ".toml", "TOML", FileCategory.CONFIGURATION, 200),
+        FileRecord("samples/demo/pyproject.toml", ".toml", "TOML", FileCategory.CONFIGURATION, 50),
+        FileRecord("app/main.py", ".py", "Python", FileCategory.SOURCE, 300),
+        FileRecord("samples/demo/main.py", ".py", "Python", FileCategory.SOURCE, 100),
+        FileRecord("app/models.py", ".py", "Python", FileCategory.SOURCE, 200),
+        FileRecord("samples/demo/models.py", ".py", "Python", FileCategory.SOURCE, 80),
+        FileRecord("tests/test_app.py", ".py", "Python", FileCategory.TEST, 150),
+        FileRecord("samples/demo/tests/test_sample.py", ".py", "Python", FileCategory.TEST, 50),
+    ]
+
+    entry_points = [
+        EntryPointRecord("app/main.py", ["Contains __main__"], Confidence.HIGH, "CLI"),
+    ]
+    hotspots = [
+        HotspotRecord("app/main.py", 2, 2, 5, 4, ["Dense module"], "Hotspot"),
+    ]
+
+    engine = ReadingOrderEngine(files, entry_points, hotspots)
+    reading_list = engine.generate()
+
+    assert reading_list[0].rel_path == "README.md"
+    assert reading_list[1].rel_path == "pyproject.toml"
+    for item in reading_list:
+        assert not item.rel_path.startswith("samples/")
+        assert not item.rel_path.startswith("tests/fixtures/")
+
