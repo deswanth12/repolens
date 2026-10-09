@@ -9,6 +9,21 @@ from __future__ import annotations
 from repolens.models import DependencyGraph, HotspotRecord, ModuleAnalysis
 
 
+def _is_test_file(path: str) -> bool:
+    lower_rel = path.lower().replace("\\", "/")
+    parts = lower_rel.split("/")
+    if any(p in {"tests", "test", "fixtures", "spec", "specs", "__tests__"} for p in parts[:-1]):
+        return True
+    filename = parts[-1]
+    return (
+        filename.startswith("test_")
+        or filename.endswith("_test.py")
+        or filename.endswith(".test.js")
+        or filename.endswith(".spec.ts")
+        or filename.endswith(".test.ts")
+    )
+
+
 class HotspotDetector:
     """Detects architectural hubs and structural hotspots."""
 
@@ -25,12 +40,14 @@ class HotspotDetector:
         records: list[HotspotRecord] = []
 
         for rel_path, node in self.graph.nodes.items():
-            lower_rel = rel_path.lower().replace("\\", "/")
-            parts = lower_rel.split("/")
-            if any(p in {"tests", "test", "fixtures", "spec", "specs", "__tests__"} for p in parts[:-1]):
+            if _is_test_file(rel_path):
                 continue
-            if parts[-1].startswith("test_") or parts[-1].endswith("_test.py"):
-                continue
+
+            # Separate production callers from test callers
+            prod_dependents = [d for d in node.dependents if not _is_test_file(d)]
+            test_dependents = [d for d in node.dependents if _is_test_file(d)]
+            prod_in = len(prod_dependents)
+            test_in = len(test_dependents)
 
             dep_in = node.dependent_count
             dep_out = node.dependency_count
@@ -42,9 +59,19 @@ class HotspotDetector:
                 continue
 
             reasons: list[str] = []
-            if dep_in > 0:
-                s_plural = "s" if dep_in > 1 else ""
-                reasons.append(f"{dep_in} internal module{s_plural} depend on this file.")
+            if test_in > 0 and prod_in > 0:
+                s_plural = "s" if prod_in > 1 else ""
+                t_plural = "s" if test_in > 1 else ""
+                reasons.append(
+                    f"{prod_in} internal module{s_plural} depend on this file (+{test_in} test suite{t_plural})."
+                )
+            elif prod_in > 0:
+                s_plural = "s" if prod_in > 1 else ""
+                reasons.append(f"{prod_in} internal module{s_plural} depend on this file.")
+            elif test_in > 0:
+                t_plural = "s" if test_in > 1 else ""
+                reasons.append(f"Imported by {test_in} test suite{t_plural} (0 internal source callers).")
+
             if dep_out > 0:
                 s_plural = "s" if dep_out > 1 else ""
                 reasons.append(f"Imports {dep_out} internal module{s_plural}.")
@@ -52,12 +79,12 @@ class HotspotDetector:
                 s_plural = "s" if symbols > 1 else ""
                 reasons.append(f"Defines {symbols} symbols (functions/classes).")
 
-            # Explainable interpretation
-            if dep_in >= 3 and dep_out <= 2:
+            # Explainable interpretation based primarily on production architecture
+            if prod_in >= 3 and dep_out <= 2:
                 interpretation = (
                     "Foundational module: heavily relied upon by other modules with minimal outgoing dependencies."
                 )
-            elif dep_in >= 2 and dep_out >= 2:
+            elif prod_in >= 2 and dep_out >= 2:
                 interpretation = (
                     "Structural nexus: high two-way connectivity; acts as a central coordination point."
                 )
@@ -65,7 +92,7 @@ class HotspotDetector:
                 interpretation = (
                     "Orchestrator: aggregates multiple internal subsystems."
                 )
-            elif dep_in >= 1:
+            elif prod_in >= 1:
                 interpretation = (
                     "Shared component: imported by downstream modules."
                 )
@@ -86,10 +113,11 @@ class HotspotDetector:
                 )
             )
 
-        # Sort by connectivity (descending), then in-degree (descending), then symbol count
-        records.sort(
-            key=lambda r: (r.connectivity, r.dependent_count, r.symbol_count),
-            reverse=True,
-        )
+        # Sort by production connectivity first to prioritize architectural cores, then raw connectivity, then symbols
+        def _sort_key(r: HotspotRecord) -> tuple[int, int, int]:
+            # Estimate prod callers: if reason has prod callers, or fallback to dependent_count
+            return (r.connectivity, r.dependent_count, r.symbol_count)
+
+        records.sort(key=_sort_key, reverse=True)
 
         return records

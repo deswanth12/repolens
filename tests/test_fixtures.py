@@ -1,6 +1,7 @@
 """Integration tests running RepoLens against fixture repositories."""
 
 from pathlib import Path
+
 from repolens.engine import RepoLensEngine
 from repolens.models import Confidence
 
@@ -33,7 +34,7 @@ def test_fixture_python_layered():
     result = engine.analyze()
 
     assert result.scan.summary.project_name == "python_layered"
-    layer_names = {l.layer_name for l in result.layers}
+    layer_names = {layer.layer_name for layer in result.layers}
     assert "API / Web Layer" in layer_names
     assert "Data Access / Storage" in layer_names
     assert "Tests" in layer_names

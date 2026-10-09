@@ -1,6 +1,7 @@
 """Security tests ensuring RepoLens never executes repository code."""
 
 from pathlib import Path
+
 from repolens.engine import RepoLensEngine
 
 

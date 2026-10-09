@@ -57,6 +57,18 @@ DEFAULT_IGNORE_DIRS = {
 DEFAULT_IGNORE_FILES = {
     ".DS_Store",
     "Thumbs.db",
+    ".env",
+    ".env.local",
+    ".env.development",
+    ".env.test",
+    ".env.production",
+    "id_rsa",
+    "id_ed25519",
+    "id_ecdsa",
+    "id_dsa",
+    "credentials.json",
+    "service-account.json",
+    "client_secret.json",
 }
 
 
@@ -107,6 +119,8 @@ class IgnoreFilter:
     def is_file_ignored(self, file_name: str, rel_path: str) -> bool:
         """Check for files during walk."""
         if file_name in DEFAULT_IGNORE_FILES:
+            return True
+        if file_name.startswith(".env.") or file_name.endswith(".env"):
             return True
         if file_name.endswith((".pyc", ".pyo", ".pyd")):
             return True

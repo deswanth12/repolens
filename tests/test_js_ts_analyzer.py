@@ -1,6 +1,7 @@
 """Tests for the JavaScript/TypeScript and Fallback analyzers."""
 
 from pathlib import Path
+
 from repolens.analyzers.fallback_analyzer import FallbackAnalyzer
 from repolens.analyzers.js_ts_analyzer import JavaScriptTypeScriptAnalyzer
 from repolens.models import FileCategory, FileRecord, SymbolType
@@ -77,6 +78,13 @@ func main() {
     assert analyzer.can_analyze(rec) is True
 
     analysis = analyzer.analyze(file_path, "main.go")
+    assert analysis.language == "Go"
     assert "Structural analysis is limited" in (analysis.parse_error or "")
     imported_mods = [i.module for i in analysis.imports]
     assert "fmt" in imported_mods or "net/http" in imported_mods
+
+    rust_path = tmp_path / "lib.rs"
+    rust_path.write_text("use std::collections::HashMap;\n", encoding="utf-8")
+    rust_analysis = analyzer.analyze(rust_path, "lib.rs")
+    assert rust_analysis.language == "Rust"
+    assert any("HashMap" in i.module for i in rust_analysis.imports)

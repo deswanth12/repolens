@@ -1,6 +1,7 @@
 """Handles semantic and keyword retrieval."""
 from app.knowledge.storage import KnowledgeStorage
 
+
 class KnowledgeRetriever:
     def __init__(self):
         self.storage = KnowledgeStorage()

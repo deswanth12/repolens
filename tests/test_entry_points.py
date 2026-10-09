@@ -1,6 +1,7 @@
 """Tests for the Entry Point Detection engine."""
 
 from pathlib import Path
+
 from repolens.intelligence.entry_points import EntryPointDetector
 from repolens.models import Confidence, ModuleAnalysis, SymbolRecord, SymbolType
 
@@ -102,3 +103,22 @@ def test_entry_point_filename_convention(tmp_path: Path):
     assert len(results) == 1
     assert results[0].rel_path == "main.py"
     assert results[0].confidence == Confidence.MEDIUM
+
+
+def test_entry_point_dunder_main(tmp_path: Path):
+    analyses = {
+        "pkg/__main__.py": ModuleAnalysis(
+            rel_path="pkg/__main__.py",
+            language="Python",
+            has_main_block=False,
+            symbols=[],
+        ),
+    }
+
+    detector = EntryPointDetector(tmp_path, analyses)
+    results = detector.detect()
+
+    assert len(results) == 1
+    assert results[0].rel_path == "pkg/__main__.py"
+    assert results[0].category == "Package Execution"
+    assert any("python -m" in r for r in results[0].reasons)

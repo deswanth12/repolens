@@ -3,6 +3,7 @@ import click
 from app.knowledge.ingest import IngestWorkflow
 from app.knowledge.retriever import KnowledgeRetriever
 
+
 @click.group()
 def cli():
     """Pentrare Knowledge Engine CLI."""

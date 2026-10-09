@@ -6,6 +6,7 @@ or classifies them as external/standard-library dependencies.
 
 from __future__ import annotations
 
+import posixpath
 from pathlib import Path
 
 from repolens.models import ImportRecord
@@ -26,14 +27,17 @@ class ImportResolver:
 
         for p in self.known_paths:
             path_obj = Path(p)
-            # e.g., "repolens/models" -> "repolens/models.py"
+            # Exact path
+            self.stem_to_path[p] = p
+            # Stem without extension (e.g., "repolens/models" -> "repolens/models.py")
             stem_key = p.rsplit(".", 1)[0]
             self.stem_to_path[stem_key] = p
 
-            if path_obj.name == "__init__.py":
-                # e.g., "repolens/discovery" -> "repolens/discovery/__init__.py"
+            # Package directory index: __init__.py, index.js, index.ts, index.jsx, index.tsx
+            if path_obj.name in {"__init__.py", "index.js", "index.ts", "index.jsx", "index.tsx"}:
                 parent_dir = path_obj.parent.as_posix()
-                self.init_to_path[parent_dir] = p
+                if parent_dir != ".":
+                    self.init_to_path[parent_dir] = p
 
     def resolve(self, source_rel_path: str, imp: ImportRecord) -> tuple[str, bool]:
         """Resolves an import to a repository file or external dependency.
@@ -45,32 +49,54 @@ class ImportResolver:
         if source_dir == ".":
             source_dir = ""
 
-        # 1. Relative imports: from . import x, from ..models import y
+        # 1. Check JS/TS path aliases like '@/components/Button' or '~/utils'
+        if imp.module and (imp.module.startswith("@/") or imp.module.startswith("~/")):
+            alias_path = imp.module[2:]
+            for prefix in ["src/", ""]:
+                cand = posixpath.normpath(f"{prefix}{alias_path}").lstrip("/")
+                if cand in self.stem_to_path:
+                    return self.stem_to_path[cand], True
+                if cand in self.init_to_path:
+                    return self.init_to_path[cand], True
+                for ext in [".js", ".jsx", ".ts", ".tsx", ".vue", ".svelte", ".mjs", ".cjs"]:
+                    if f"{cand}{ext}" in self.stem_to_path:
+                        return self.stem_to_path[f"{cand}{ext}"], True
+            return imp.module, True
+
+        # 2. JS/TS explicit relative imports (starts with ./ or ../)
+        if imp.module and (imp.module.startswith("./") or imp.module.startswith("../")):
+            target = self._resolve_relative_path(source_dir, imp.module)
+            if target:
+                return target, True
+            norm_cand = posixpath.normpath(posixpath.join(source_dir, imp.module))
+            return norm_cand, True
+
+        # 3. Python relative imports (level > 0, from . or from ..)
         if imp.level > 0:
-            target = self._resolve_relative(source_dir, imp)
+            target = self._resolve_python_relative(source_dir, imp)
             if target:
                 return target, True
             return imp.module or "relative_unresolved", True
 
-        # 2. Absolute imports: import os, from repolens.models import FileRecord
+        # 4. Absolute imports: import os, from repolens.models import FileRecord
         module_path = imp.module.replace(".", "/")
 
-        # 2a. Check if module directly matches a known file
+        # 4a. Check if module directly matches a known file
         if module_path in self.stem_to_path:
             return self.stem_to_path[module_path], True
 
-        # 2b. Check if module matches a package directory with __init__.py
+        # 4b. Check if module matches a package directory with __init__.py / index file
         if module_path in self.init_to_path:
             return self.init_to_path[module_path], True
 
-        # 2c. Check under "src/" if repository uses src layout
+        # 4c. Check under "src/" if repository uses src layout
         src_module = f"src/{module_path}"
         if src_module in self.stem_to_path:
             return self.stem_to_path[src_module], True
         if src_module in self.init_to_path:
             return self.init_to_path[src_module], True
 
-        # 2d. For "from x import y", check if y is actually a file module under x
+        # 4d. For "from x import y", check if y is actually a file module under x
         for name in imp.imported_names:
             submodule_path = f"{module_path}/{name}"
             if submodule_path in self.stem_to_path:
@@ -83,8 +109,26 @@ class ImportResolver:
         top_pkg = imp.module.split(".")[0] if imp.module else "unknown"
         return top_pkg, False
 
-    def _resolve_relative(self, source_dir: str, imp: ImportRecord) -> str | None:
-        """Resolves relative import against source file's directory."""
+    def _resolve_relative_path(self, source_dir: str, rel_path: str) -> str | None:
+        """Resolves file-system relative path (e.g. ./utils or ../components/Button)."""
+        candidate = posixpath.normpath(posixpath.join(source_dir, rel_path))
+        if candidate.startswith("./"):
+            candidate = candidate[2:]
+
+        if candidate in self.stem_to_path:
+            return self.stem_to_path[candidate]
+        if candidate in self.init_to_path:
+            return self.init_to_path[candidate]
+
+        for ext in [".js", ".jsx", ".ts", ".tsx", ".vue", ".svelte", ".mjs", ".cjs"]:
+            cand_ext = f"{candidate}{ext}"
+            if cand_ext in self.stem_to_path:
+                return self.stem_to_path[cand_ext]
+
+        return None
+
+    def _resolve_python_relative(self, source_dir: str, imp: ImportRecord) -> str | None:
+        """Resolves Python-style relative import against source file's directory."""
         dir_parts = source_dir.split("/") if source_dir else []
         steps_up = imp.level - 1
 

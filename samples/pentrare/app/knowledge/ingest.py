@@ -2,6 +2,7 @@
 from app.knowledge.parser import DocumentParser
 from app.knowledge.storage import KnowledgeStorage
 
+
 class IngestWorkflow:
     def __init__(self):
         self.parser = DocumentParser()

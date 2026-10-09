@@ -19,6 +19,7 @@ except ImportError:
 from repolens.models import Confidence, EntryPointRecord, ModuleAnalysis
 
 ENTRYPOINT_FILENAMES = {
+    "__main__.py": ("Package Execution", "Standard Python module execution entry point (python -m)"),
     "main.py": ("Application", "Standard Python application entry-point filename"),
     "cli.py": ("CLI", "Standard command-line interface entry-point filename"),
     "app.py": ("Web / Application", "Standard application server entry-point filename"),

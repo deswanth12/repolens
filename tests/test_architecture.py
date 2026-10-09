@@ -45,12 +45,12 @@ def test_architecture_inference():
     inferer = ArchitectureInferer(files, analyses, graph)
     layers = inferer.infer()
 
-    layer_names = {l.layer_name for l in layers}
+    layer_names = {layer.layer_name for layer in layers}
     assert "CLI / Interface" in layer_names
     assert "API / Web Layer" in layer_names
     assert "Data Access / Storage" in layer_names
     assert "Tests" in layer_names
 
     # Check evidence citation
-    api_layer = next(l for l in layers if l.layer_name == "API / Web Layer")
+    api_layer = next(layer for layer in layers if layer.layer_name == "API / Web Layer")
     assert any("fastapi" in e for e in api_layer.evidence)

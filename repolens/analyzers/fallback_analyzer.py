@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 from repolens.analyzers.base import BaseAnalyzer
+from repolens.discovery.language import detect_language
 from repolens.models import FileCategory, FileRecord, ImportRecord, ModuleAnalysis
 
 SUPPORTED_LANGUAGES = {"Python", "JavaScript", "TypeScript"}
@@ -58,9 +59,13 @@ class FallbackAnalyzer(BaseAnalyzer):
         except Exception:
             pass
 
+        lang = detect_language(file_path.suffix, file_path.name)
+        if lang == "Unknown" and file_path.suffix:
+            lang = file_path.suffix.lstrip(".")
+
         return ModuleAnalysis(
             rel_path=rel_path,
-            language=file_path.suffix.lstrip(".") or "Unknown",
+            language=lang,
             symbols=[],
             imports=imports,
             exports=[],

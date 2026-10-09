@@ -1,6 +1,7 @@
 """Persistent storage for knowledge documents."""
 import sqlite3
 
+
 class KnowledgeStorage:
     def __init__(self, db_path: str = ":memory:"):
         self.conn = sqlite3.connect(db_path)

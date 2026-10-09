@@ -1,6 +1,7 @@
 """Tests for the Python AST analyzer."""
 
 from pathlib import Path
+
 from repolens.analyzers.python_analyzer import PythonAnalyzer
 from repolens.models import FileCategory, FileRecord, SymbolType
 
@@ -104,3 +105,34 @@ def test_python_analyzer_syntax_error(tmp_path: Path):
     assert analysis.parse_error is not None
     assert "Syntax error" in analysis.parse_error
     assert len(analysis.symbols) == 0
+
+
+def test_python_analyzer_conditional_and_nested_imports(tmp_path: Path):
+    code = """
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
+if True:
+    from typing import Optional, List
+
+def inner():
+    import math
+
+if __name__ == '__main__':
+    print('running')
+"""
+    file_path = tmp_path / "conditional.py"
+    file_path.write_text(code, encoding="utf-8")
+
+    analyzer = PythonAnalyzer()
+    analysis = analyzer.analyze(file_path, "conditional.py")
+
+    assert analysis.parse_error is None
+    assert analysis.has_main_block is True
+    modules = {imp.module for imp in analysis.imports}
+    assert "tomllib" in modules
+    assert "tomli" in modules
+    assert "typing" in modules
+    assert "math" in modules

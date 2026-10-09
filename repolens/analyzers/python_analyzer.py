@@ -109,8 +109,8 @@ class PythonAnalyzer(BaseAnalyzer):
         exports: list[str] = []
         has_main_block = False
 
-        for node in tree.body:
-            # 1. Imports
+        # 1. Discover all imports and main execution checks throughout the AST
+        for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     imports.append(
@@ -123,7 +123,6 @@ class PythonAnalyzer(BaseAnalyzer):
                             line_number=node.lineno,
                         )
                     )
-
             elif isinstance(node, ast.ImportFrom):
                 module_name = node.module or ""
                 names = [a.name for a in node.names]
@@ -137,9 +136,16 @@ class PythonAnalyzer(BaseAnalyzer):
                         line_number=node.lineno,
                     )
                 )
+            elif isinstance(node, ast.If) and not has_main_block and _is_main_check(node):
+                has_main_block = True
 
-            # 2. Functions
-            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        # Ensure imports are ordered deterministically by line number
+        imports.sort(key=lambda r: r.line_number)
+
+        # 2. Extract top-level symbols and __all__ exports from module body
+        for node in tree.body:
+            # Functions
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 decorators = [_format_expr(d) for d in node.decorator_list if _format_expr(d)]
                 docstring = ast.get_docstring(node)
                 first_doc_line = docstring.strip().splitlines()[0] if docstring else None
@@ -155,7 +161,7 @@ class PythonAnalyzer(BaseAnalyzer):
                     )
                 )
 
-            # 3. Classes
+            # Classes
             elif isinstance(node, ast.ClassDef):
                 decorators = [_format_expr(d) for d in node.decorator_list if _format_expr(d)]
                 bases = [_format_expr(b) for b in node.bases if _format_expr(b)]
@@ -191,12 +197,7 @@ class PythonAnalyzer(BaseAnalyzer):
                             )
                         )
 
-            # 4. Entry point guard: if __name__ == "__main__":
-            elif isinstance(node, ast.If):
-                if _is_main_check(node):
-                    has_main_block = True
-
-            # 5. Exports: __all__ = [...]
+            # Exports: __all__ = [...]
             elif isinstance(node, ast.Assign):
                 for target in node.targets:
                     if (

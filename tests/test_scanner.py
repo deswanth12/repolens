@@ -1,13 +1,13 @@
 """Tests for repository discovery, ignore filters, and language detection."""
 
 from pathlib import Path
+
 import pytest
 
 from repolens.discovery.ignore import IgnoreFilter
 from repolens.discovery.language import (
     classify_file,
     detect_language,
-    is_binary_file,
 )
 from repolens.discovery.scanner import RepositoryScanner
 from repolens.models import FileCategory
@@ -84,3 +84,13 @@ def test_scanner_nonexistent_path(tmp_path: Path):
     scanner = RepositoryScanner(non_existent)
     with pytest.raises(FileNotFoundError):
         scanner.scan()
+
+
+def test_ignore_filter_sensitive_files(tmp_path: Path):
+    filter_obj = IgnoreFilter(tmp_path)
+    assert filter_obj.is_file_ignored(".env", ".env") is True
+    assert filter_obj.is_file_ignored(".env.local", ".env.local") is True
+    assert filter_obj.is_file_ignored(".env.production", ".env.production") is True
+    assert filter_obj.is_file_ignored("credentials.json", "credentials.json") is True
+    assert filter_obj.is_file_ignored("id_rsa", "id_rsa") is True
+    assert filter_obj.is_file_ignored("main.py", "src/main.py") is False
