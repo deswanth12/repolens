@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/deswanth12/repolens/actions/workflows/ci.yml"><img src="https://github.com/deswanth12/repolens/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
-  <a href="https://github.com/deswanth12/repolens/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="Release Version"></a>
+  <a href="https://github.com/deswanth12/repolens/releases"><img src="https://img.shields.io/badge/version-0.1.1-blue.svg" alt="Release Version"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg" alt="Python 3.10+"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-000000.svg" alt="Code style: ruff"></a>
@@ -94,7 +94,7 @@ repolens path/to/project
 ## Example Output
 
 ```text
-RepoLens v0.1.0 -- Understand how a codebase works
+RepoLens v0.1.1 -- Understand how a codebase works
 ------------------------------------------------------------
   Project:                repolens
   Root Path:              /path/to/repolens
@@ -165,7 +165,7 @@ repolens onboard .
 ```
 
 ```text
-RepoLens v0.1.0 -- Contributor Onboarding: repolens
+RepoLens v0.1.1 -- Contributor Onboarding: repolens
 ------------------------------------------------------------
 YOUR FIRST 30 MINUTES
 A structured, time-boxed roadmap to build a working mental model.

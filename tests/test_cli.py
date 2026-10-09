@@ -5,6 +5,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
+from repolens import __version__
 from repolens.cli import main
 
 
@@ -12,7 +13,8 @@ def test_cli_version():
     runner = CliRunner()
     result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
-    assert "repolens, version 0.1.0" in result.output
+    assert f"repolens, version {__version__}" in result.output
+    assert "repolens, version 0.1.1" in result.output
 
 
 def test_cli_help():

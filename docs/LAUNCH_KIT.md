@@ -1,6 +1,6 @@
 # RepoLens — Launch & Feedback Kit
 
-This kit contains verified launch messaging, quick demonstration scripts, feedback templates, and outreach material for RepoLens v0.1.0.
+This kit contains verified launch messaging, quick demonstration scripts, feedback templates, and outreach material for RepoLens v0.1.1.
 
 ---
 
@@ -57,10 +57,13 @@ RepoLens answers these questions locally and deterministically using AST parsing
 
 ### Step 1: Install
 ```bash
-# Direct install from GitHub release wheel:
-pip install https://github.com/deswanth12/repolens/releases/download/v0.1.0/repolens-0.1.0-py3-none-any.whl
+# Option 1: Direct install from GitHub release wheel:
+pip install https://github.com/deswanth12/repolens/releases/download/v0.1.1/repolens-0.1.1-py3-none-any.whl
 
-# Or install editable from repository:
+# Option 2: When published to PyPI:
+# pip install repolens
+
+# Option 3: Install editable from repository:
 git clone https://github.com/deswanth12/repolens.git
 cd repolens
 pip install -e .
@@ -72,7 +75,7 @@ repolens .
 ```
 **Verified Output:**
 ```text
-RepoLens v0.1.0 -- Understand how a codebase works
+RepoLens v0.1.1 -- Understand how a codebase works
 ------------------------------------------------------------
   Project:                repolens
   Primary Language:       Python
@@ -108,12 +111,12 @@ repolens onboard .
 
 ## 5. Short GitHub Announcement
 
-**Title:** RepoLens v0.1.0 — Understand how an unfamiliar codebase works (local-first, zero-execution static analysis)
+**Title:** RepoLens v0.1.1 — Understand how an unfamiliar codebase works (local-first, zero-execution static analysis)
 
 **Body:**
 > Hey everyone! 👋
 >
-> I've just released **RepoLens v0.1.0**, an open-source CLI built to solve a simple but frustrating problem: *“I just cloned this codebase. Where do I actually start?”*
+> I've just released **RepoLens v0.1.1**, an open-source CLI built to solve a simple but frustrating problem: *“I just cloned this codebase. Where do I actually start?”*
 >
 > Instead of drawing 300-node dependency spiderwebs or sending code to external LLMs, RepoLens uses AST parsing (Python stdlib `ast`, JavaScript/TypeScript `tree-sitter`) to deterministically answer:
 >
@@ -125,7 +128,7 @@ repolens onboard .
 > It runs 100% locally with zero code execution and zero network calls.
 >
 > - Repository: https://github.com/deswanth12/repolens
-> - Release: https://github.com/deswanth12/repolens/releases/tag/v0.1.0
+> - Release: https://github.com/deswanth12/repolens/releases/tag/v0.1.1
 >
 > Try running `repolens onboard .` on your own project. Feedback and bug reports on different repository layouts are very welcome!
 
@@ -156,7 +159,7 @@ Key guarantees:
 ✓ 100% local and offline (zero telemetry, zero cloud calls).
 ✓ MIT Licensed.
 
-RepoLens v0.1.0 is now live on GitHub:
+RepoLens v0.1.1 is now live on GitHub:
 https://github.com/deswanth12/repolens
 
 If you maintain or contribute to an open-source project, run `repolens onboard .` on your repo and let me know what you think of the generated reading order!

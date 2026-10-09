@@ -5,6 +5,22 @@ All notable changes to **RepoLens** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-10-09
+
+### Fixed
+- **Python 3.10 Compatibility**: Resolved `tomllib` unavailability in Python 3.10 environments by declaring `tomli>=1.1.0;python_version<'3.11'` in dependencies and providing regex fallback parsing for `[project.scripts]`.
+- **CI / Release Workflow Validation**: Repaired duplicate YAML keys in `.github/workflows/release.yml` and verified matrix testing across Python 3.10, 3.11, and 3.12 on Linux, Windows, and macOS.
+- **Contributing Guide**: Fixed repository clone URL in `CONTRIBUTING.md` to point to active repository `deswanth12/repolens`.
+
+### Added
+- **PyPA Trusted Publishing**: Added dedicated GitHub Actions publishing workflow (`.github/workflows/publish-pypi.yml`) configured for OIDC token-based publication to PyPI with manual environment gating.
+- **Troubleshooting & FAQ Documentation**: Added comprehensive troubleshooting section in `README.md` covering monorepo subprojects, custom ignore flags (`-i`), 2 MB file limits, and unsupported language fallbacks.
+- **Frictionless Installation Options**: Documented direct wheel and git installation one-liners in `README.md`.
+- **Launch & Feedback Kit**: Created `docs/LAUNCH_KIT.md` containing verified demonstration scripts, launch messaging, outreach templates, and structured feedback logging.
+
+### Changed
+- Explicitly excluded `.mypy_cache/` and `.ruff_cache/` in `.gitignore`.
+
 ## [0.1.0] - 2026-10-08
 
 ### Added
