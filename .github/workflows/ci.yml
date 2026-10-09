@@ -33,7 +33,7 @@ jobs:
 
       - name: Run Ruff linter
         run: |
-          ruff check repolens/
+          ruff check .
 
       - name: Run Mypy type checker
         run: |
@@ -42,3 +42,9 @@ jobs:
       - name: Run test suite
         run: |
           pytest -v
+
+      - name: Verify package build
+        run: |
+          pip install build
+          python -m build
+

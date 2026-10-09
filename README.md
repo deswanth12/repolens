@@ -9,6 +9,16 @@
   No arbitrary 0–100 scores. No repository code execution. No LLM keys required.
 </p>
 
+<p align="center">
+  <a href="https://github.com/deswanth12/repolens/actions/workflows/ci.yml"><img src="https://github.com/deswanth12/repolens/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
+  <a href="https://github.com/deswanth12/repolens/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="Release Version"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg" alt="Python 3.10+"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-000000.svg" alt="Code style: ruff"></a>
+  <a href="https://mypy-lang.org/"><img src="https://img.shields.io/badge/types-mypy-blue.svg" alt="Types: Mypy"></a>
+  <img src="https://img.shields.io/badge/telemetry-zero-success.svg" alt="Zero Telemetry">
+</p>
+
 ---
 
 ## The Core Problem
@@ -54,7 +64,7 @@ Existing tools either:
 
 ```bash
 # Clone and install locally
-git clone https://github.com/repolens/repolens.git
+git clone https://github.com/deswanth12/repolens.git
 cd repolens
 pip install -e .
 ```
@@ -202,6 +212,8 @@ repolens onboard .
 - [Project Roadmap](docs/ROADMAP.md)
 - [Security Policy](SECURITY.md)
 - [Contributing Guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+
 
 ---
 
