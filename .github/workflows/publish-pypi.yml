@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/repolens
+      url: https://pypi.org/p/repolens-toolkit
     permissions:
       id-token: write
 
