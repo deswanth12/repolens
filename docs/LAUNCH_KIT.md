@@ -57,11 +57,11 @@ RepoLens answers these questions locally and deterministically using AST parsing
 
 ### Step 1: Install
 ```bash
-# Option 1: Direct install from GitHub release wheel:
-pip install https://github.com/deswanth12/repolens/releases/download/v0.1.1/repolens-0.1.1-py3-none-any.whl
+# Option 1: Install from PyPI (Recommended):
+pip install repolens-toolkit
 
-# Option 2: When published to PyPI:
-# pip install repolens
+# Option 2: Direct install from GitHub release wheel:
+pip install https://github.com/deswanth12/repolens/releases/download/v0.1.1/repolens_toolkit-0.1.1-py3-none-any.whl
 
 # Option 3: Install editable from repository:
 git clone https://github.com/deswanth12/repolens.git

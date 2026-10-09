@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://pypi.org/project/repolens-toolkit/"><img src="https://img.shields.io/pypi/v/repolens-toolkit.svg" alt="PyPI Version"></a>
   <a href="https://github.com/deswanth12/repolens/actions/workflows/ci.yml"><img src="https://github.com/deswanth12/repolens/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
   <a href="https://github.com/deswanth12/repolens/releases"><img src="https://img.shields.io/badge/version-0.1.1-blue.svg" alt="Release Version"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg" alt="Python 3.10+"></a>
@@ -62,20 +63,23 @@ Existing tools either:
 
 ### Installation
 
-Choose any of the following installation methods:
-
 ```bash
-# Option 1: Direct install from official GitHub release wheel
-pip install https://github.com/deswanth12/repolens/releases/download/v0.1.0/repolens-0.1.0-py3-none-any.whl
+# Option 1: Install from PyPI (Recommended)
+pip install repolens-toolkit
 
-# Option 2: Install directly from GitHub
+# Option 2: Direct install from official GitHub release wheel
+pip install https://github.com/deswanth12/repolens/releases/download/v0.1.1/repolens_toolkit-0.1.1-py3-none-any.whl
+
+# Option 3: Install directly from GitHub
 pip install git+https://github.com/deswanth12/repolens.git
 
-# Option 3: Clone and install locally in editable mode
+# Option 4: Clone and install locally in editable mode
 git clone https://github.com/deswanth12/repolens.git
 cd repolens
 pip install -e .
 ```
+
+*Note: The package is distributed as `repolens-toolkit` on PyPI and exposes the runnable `repolens` CLI.*
 
 ### Basic Usage
 

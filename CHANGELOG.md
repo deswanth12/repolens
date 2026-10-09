@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PyPA Trusted Publishing**: Added dedicated GitHub Actions publishing workflow (`.github/workflows/publish-pypi.yml`) configured for OIDC token-based publication to PyPI with manual environment gating.
 - **Troubleshooting & FAQ Documentation**: Added comprehensive troubleshooting section in `README.md` covering monorepo subprojects, custom ignore flags (`-i`), 2 MB file limits, and unsupported language fallbacks.
 - **Frictionless Installation Options**: Documented direct wheel and git installation one-liners in `README.md`.
+- **PyPI Distribution**: Configured official PyPI distribution name as `repolens-toolkit` (installable via `pip install repolens-toolkit`).
 - **Launch & Feedback Kit**: Created `docs/LAUNCH_KIT.md` containing verified demonstration scripts, launch messaging, outreach templates, and structured feedback logging.
 
 ### Changed
