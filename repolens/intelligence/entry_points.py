@@ -14,7 +14,11 @@ from typing import Any
 try:
     import tomllib  # Python 3.11+
 except ImportError:
-    tomllib = None  # type: ignore
+    try:
+        import tomli as tomllib  # type: ignore
+    except ImportError:
+        tomllib = None  # type: ignore
+
 
 from repolens.discovery.language import is_auxiliary_path
 from repolens.models import Confidence, EntryPointRecord, ModuleAnalysis
@@ -149,24 +153,44 @@ class EntryPointDetector:
     def _inspect_pyproject(self, get_or_create_fn: Any) -> None:
         """Parses pyproject.toml for script definitions."""
         pyproject_file = self.repo_root / "pyproject.toml"
-        if not pyproject_file.is_file() or tomllib is None:
+        if not pyproject_file.is_file():
             return
 
         try:
             content = pyproject_file.read_text(encoding="utf-8", errors="replace")
-            data = tomllib.loads(content)
         except Exception:
             return
 
-        # Look in [project.scripts] and [tool.poetry.scripts]
         scripts: dict[str, str] = {}
-        project = data.get("project", {})
-        if "scripts" in project and isinstance(project["scripts"], dict):
-            scripts.update(project["scripts"])
+        if tomllib is not None:
+            try:
+                data = tomllib.loads(content)
+                project = data.get("project", {})
+                if "scripts" in project and isinstance(project["scripts"], dict):
+                    scripts.update(project["scripts"])
+                poetry = data.get("tool", {}).get("poetry", {})
+                if "scripts" in poetry and isinstance(poetry["scripts"], dict):
+                    scripts.update(poetry["scripts"])
+            except Exception:
+                pass
 
-        poetry = data.get("tool", {}).get("poetry", {})
-        if "scripts" in poetry and isinstance(poetry["scripts"], dict):
-            scripts.update(poetry["scripts"])
+        if not scripts:
+            in_scripts_section = False
+            for line in content.splitlines():
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+                if stripped.startswith("["):
+                    section_name = stripped.strip("[]").strip()
+                    in_scripts_section = section_name in ("project.scripts", "tool.poetry.scripts")
+                    continue
+                if in_scripts_section and "=" in stripped:
+                    key, val = stripped.split("=", 1)
+                    clean_key = key.strip()
+                    clean_val = val.strip().strip("'\"")
+                    if clean_key and clean_val:
+                        scripts[clean_key] = clean_val
+
 
         for cmd_name, entry_str in scripts.items():
             # e.g. "repolens.cli:main" -> "repolens/cli"

@@ -1,10 +1,15 @@
 name: Release
-name: Release
 
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (default: v0.1.0)'
+        required: false
+        default: 'v0.1.0'
 
 jobs:
   build-and-release:
@@ -16,6 +21,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag_name || github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -33,6 +40,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag_name || github.ref_name }}
           files: dist/*
           generate_release_notes: true
           draft: false
