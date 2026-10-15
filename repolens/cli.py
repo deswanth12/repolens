@@ -63,6 +63,13 @@ class RepoLensGroup(click.Group):
 
 @click.group(cls=RepoLensGroup, invoke_without_command=True)
 @click.option("--json", "json_output", is_flag=True, help="Output machine-readable JSON.")
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["text", "json"], case_sensitive=False),
+    default=None,
+    help="Report format (text, json).",
+)
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
 @click.version_option(version=__version__, prog_name="repolens")
@@ -70,6 +77,7 @@ class RepoLensGroup(click.Group):
 def main(
     ctx: click.Context,
     json_output: bool,
+    fmt: str | None,
     custom_ignores: tuple[str, ...],
     no_gitignore: bool,
     path: str = ".",
@@ -79,9 +87,10 @@ def main(
     Run 'repolens [PATH]' to analyze a repository and generate an explainable map.
     """
     if ctx.invoked_subcommand is None:
+        effective_json = json_output or (fmt == "json") or ctx.params.get("json_output", False)
         run_full_analysis(
             path=path,
-            json_output=json_output or ctx.params.get("json_output", False),
+            json_output=effective_json,
             custom_ignores=custom_ignores,
             respect_gitignore=not no_gitignore,
         )

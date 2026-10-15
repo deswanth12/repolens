@@ -15,18 +15,40 @@ from repolens.models import FileCategory, FileRecord, ImportRecord, ModuleAnalys
 
 SUPPORTED_LANGUAGES = {"Python", "JavaScript", "TypeScript"}
 
-IMPORT_REGEXES = [
-    # Go: import "fmt" or import ( "fmt" )
-    re.compile(r"""import\s+(?:\(\s*([\s\S]*?)\s*\)|"([^"]+)")"""),
-    # Rust: use std::collections::HashMap;
-    re.compile(r"""use\s+([a-zA-Z0-9_:]+)"""),
-    # Java / Kotlin: import java.util.List;
-    re.compile(r"""import\s+(?:static\s+)?([a-zA-Z0-9_.*]+);?"""),
-    # C / C++: #include <stdio.h> or #include "header.h"
-    re.compile(r"""#include\s+[<"]([^>"]+)[>"]"""),
-    # C#: using System;
-    re.compile(r"""using\s+([a-zA-Z0-9_.]+);"""),
-]
+LANGUAGE_IMPORT_REGEXES: dict[str, list[re.Pattern[str]]] = {
+    "Go": [
+        # import "fmt" or import ( "fmt" \n "os" )
+        re.compile(r"""^[ \t]*import[ \t]+(?:\([ \t]*\n?([\s\S]*?)\n?[ \t]*\)|"([^"]+)")""", re.MULTILINE),
+    ],
+    "Rust": [
+        # use std::collections::HashMap;
+        re.compile(r"""^[ \t]*use[ \t]+([a-zA-Z0-9_:]+)""", re.MULTILINE),
+    ],
+    "Java": [
+        re.compile(r"""^[ \t]*import[ \t]+(?:static[ \t]+)?([a-zA-Z0-9_.*]+);?""", re.MULTILINE),
+    ],
+    "Kotlin": [
+        re.compile(r"""^[ \t]*import[ \t]+(?:static[ \t]+)?([a-zA-Z0-9_.*]+);?""", re.MULTILINE),
+    ],
+    "C": [
+        re.compile(r"""^[ \t]*#include[ \t]+[<"]([^>"]+)[>"]""", re.MULTILINE),
+    ],
+    "C++": [
+        re.compile(r"""^[ \t]*#include[ \t]+[<"]([^>"]+)[>"]""", re.MULTILINE),
+    ],
+    "C/C++ Header": [
+        re.compile(r"""^[ \t]*#include[ \t]+[<"]([^>"]+)[>"]""", re.MULTILINE),
+    ],
+    "C++ Header": [
+        re.compile(r"""^[ \t]*#include[ \t]+[<"]([^>"]+)[>"]""", re.MULTILINE),
+    ],
+    "C#": [
+        re.compile(r"""^[ \t]*using[ \t]+([a-zA-Z0-9_.]+);""", re.MULTILINE),
+    ],
+    "Ruby": [
+        re.compile(r"""^[ \t]*require(?:_relative)?[ \t]+['"]([^'"]+)['"]""", re.MULTILINE),
+    ],
+}
 
 
 class FallbackAnalyzer(BaseAnalyzer):
@@ -67,21 +89,29 @@ class FallbackAnalyzer(BaseAnalyzer):
         imports: list[ImportRecord] = []
         try:
             content = file_path.read_text(encoding="utf-8", errors="replace")
-            for regex in IMPORT_REGEXES:
+            regexes = LANGUAGE_IMPORT_REGEXES.get(lang, [])
+            for regex in regexes:
                 for match in regex.finditer(content):
                     mod = match.group(1) or (match.group(2) if len(match.groups()) > 1 else None)
                     if mod:
-                        # Clean multiple lines in Go block
-                        for line in mod.splitlines():
-                            clean = line.strip().strip('"')
+                        if lang == "Go":
+                            # Clean multi-line Go block or single quoted import
+                            for line in mod.splitlines():
+                                quoted_match = re.search(r'"([^"]+)"', line)
+                                if quoted_match:
+                                    clean = quoted_match.group(1).strip()
+                                    if clean:
+                                        imports.append(ImportRecord(module=clean, line_number=1))
+                                else:
+                                    clean = line.strip().strip('"')
+                                    if clean and not clean.startswith("//"):
+                                        imports.append(ImportRecord(module=clean, line_number=1))
+                        else:
+                            clean = mod.strip().strip('"\'')
                             if clean:
                                 imports.append(ImportRecord(module=clean, line_number=1))
         except Exception:
             pass
-
-        lang = detect_language(file_path.suffix, file_path.name)
-        if lang == "Unknown" and file_path.suffix:
-            lang = file_path.suffix.lstrip(".")
 
         return ModuleAnalysis(
             rel_path=rel_path,
@@ -90,7 +120,7 @@ class FallbackAnalyzer(BaseAnalyzer):
             imports=imports,
             exports=[],
             has_main_block=False,
-            parse_error="Structural analysis is limited for this language.",
+            parse_error=None,
             analysis_mode="regex_fallback",
             warnings=["Structural analysis is limited for this language."],
         )

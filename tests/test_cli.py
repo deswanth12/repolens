@@ -14,7 +14,7 @@ def test_cli_version():
     result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
     assert f"repolens, version {__version__}" in result.output
-    assert "repolens, version 0.1.1" in result.output
+    assert "repolens, version 0.1.2" in result.output
 
 
 def test_cli_help():
@@ -136,4 +136,32 @@ def test_cli_unicode_and_spaces_json_output(tmp_path: Path):
     data = json.loads(result.output)
     assert "summary" in data
     assert any("módulo_principal.py" in f["rel_path"] for f in data["files"])
+
+
+def test_cli_python_m_execution():
+    """Verifies that python -m repolens works seamlessly via __main__.py."""
+    import subprocess
+    import sys
+
+    res = subprocess.run(
+        [sys.executable, "-m", "repolens", "--version"],
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 0
+    assert "repolens, version" in res.stdout
+
+
+def test_cli_root_format_option(tmp_path: Path):
+    """Verifies that the root CLI invocation accepts --format json directly."""
+    (tmp_path / "README.md").write_text("# Test Repo\n", encoding="utf-8")
+    (tmp_path / "app.py").write_text("x = 1\n", encoding="utf-8")
+
+    runner = CliRunner()
+    result = runner.invoke(main, [str(tmp_path), "--format", "json"])
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert "summary" in data
+    assert "modules" in data
+    assert "app.py" in data["modules"]
 

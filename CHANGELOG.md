@@ -5,6 +5,20 @@ All notable changes to **RepoLens** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-10-15
+
+### Fixed
+- **Cross-Language Comment Keyword Leakage**: Scoped regex import detection in `FallbackAnalyzer` to language-specific patterns and anchored to line starts. Fixed bug where comments like `// use click events` in Go files falsely registered Python `click` imports and misclassified projects into Python CLI architecture.
+- **Accurate Fallback Reporting**: Removed misleading `parse_error` on valid unsupported-language files (Go, Rust, Ruby, etc.) in `FallbackAnalyzer`. Graceful fallback is now cleanly reported via `analysis_mode="regex_fallback"` and informative `warnings` without falsely marking valid files as broken.
+- **Compiled Language Entry Points**: Added standard entry-point heuristics for Go (`main.go`), Rust (`main.rs`), C (`main.c`), C++ (`main.cpp`, `main.cc`), and Java (`Main.java`).
+- **Canonical README Prioritization**: Fixed alphabetical priority distortion in `ReadingOrderEngine` and `OnboardingPlanner` that caused auxiliary root documentation (e.g. `README-VIM.md`, `README.zh-CN.md`) to be selected as step 1 instead of canonical `README.md`.
+- **Package Execution Support**: Added `repolens/__main__.py` to support running `python -m repolens` in environments where script entrypoints are not added to PATH.
+- **CLI Root Format Option**: Added `--format [text|json]` option to root `repolens [PATH]` invocation, eliminating option mismatch errors when users run `repolens . --format json`.
+- **JSON Module Export**: Included full AST module analyses (`modules`) in `FullAnalysisResult.to_dict()` for downstream consumers and AI agents.
+
+### Added
+- **Dual Console Script Alias**: Registered both `repolens` and `repolens-toolkit` console script entrypoints in `pyproject.toml` for seamless `pipx run repolens-toolkit` and `repolens` usage.
+
 ## [0.1.1] - 2026-10-09
 
 ### Fixed

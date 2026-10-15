@@ -50,15 +50,26 @@ class ReadingOrderEngine:
             )
 
         # 1. Primary Documentation (README)
+        exact_readmes = ("readme.md", "readme.rst", "readme.txt", "readme")
         root_readme = next(
             (
                 f.rel_path
                 for f in self.files
                 if Path(f.rel_path).parent.as_posix() == "."
-                and Path(f.rel_path).name.lower().startswith("readme")
+                and Path(f.rel_path).name.lower() in exact_readmes
             ),
             None,
         )
+        if not root_readme:
+            root_readme = next(
+                (
+                    f.rel_path
+                    for f in self.files
+                    if Path(f.rel_path).parent.as_posix() == "."
+                    and Path(f.rel_path).name.lower().startswith("readme")
+                ),
+                None,
+            )
         readme = root_readme or next(
             (
                 f.rel_path

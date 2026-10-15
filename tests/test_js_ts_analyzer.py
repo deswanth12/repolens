@@ -79,7 +79,9 @@ func main() {
 
     analysis = analyzer.analyze(file_path, "main.go")
     assert analysis.language == "Go"
-    assert "Structural analysis is limited" in (analysis.parse_error or "")
+    assert analysis.parse_error is None
+    assert analysis.analysis_mode == "regex_fallback"
+    assert any("Structural analysis is limited" in w for w in analysis.warnings)
     imported_mods = [i.module for i in analysis.imports]
     assert "fmt" in imported_mods or "net/http" in imported_mods
 
@@ -87,7 +89,29 @@ func main() {
     rust_path.write_text("use std::collections::HashMap;\n", encoding="utf-8")
     rust_analysis = analyzer.analyze(rust_path, "lib.rs")
     assert rust_analysis.language == "Rust"
+    assert rust_analysis.parse_error is None
+    assert rust_analysis.analysis_mode == "regex_fallback"
     assert any("HashMap" in i.module for i in rust_analysis.imports)
+
+
+def test_fallback_analyzer_does_not_falsely_extract_cross_language_comments(tmp_path: Path):
+    go_source = """package tui
+// Note: use click events to handle user actions
+import (
+    "os"
+    "time"
+)
+"""
+    file_path = tmp_path / "tui.go"
+    file_path.write_text(go_source, encoding="utf-8")
+
+    analyzer = FallbackAnalyzer()
+    analysis = analyzer.analyze(file_path, "tui.go")
+    assert analysis.parse_error is None
+    imported_mods = [i.module for i in analysis.imports]
+    assert "os" in imported_mods
+    assert "time" in imported_mods
+    assert "click" not in imported_mods
 
 
 def test_malformed_javascript_produces_parse_warning_or_fallback(tmp_path: Path):

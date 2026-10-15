@@ -193,3 +193,28 @@ def test_entry_point_excludes_samples_and_fixtures(tmp_path: Path):
     assert len(results) == 1
     assert results[0].rel_path == "src/app.py"
 
+
+def test_entry_point_compiled_languages(tmp_path: Path):
+    analyses = {
+        "main.go": ModuleAnalysis(
+            rel_path="main.go",
+            language="Go",
+            symbols=[],
+        ),
+        "src/main.rs": ModuleAnalysis(
+            rel_path="src/main.rs",
+            language="Rust",
+            symbols=[],
+        ),
+    }
+
+    detector = EntryPointDetector(tmp_path, analyses)
+    results = detector.detect()
+
+    detected_paths = {ep.rel_path for ep in results}
+    assert "main.go" in detected_paths
+    assert "src/main.rs" in detected_paths
+    go_ep = next(ep for ep in results if ep.rel_path == "main.go")
+    assert go_ep.category == "Application"
+    assert any("Go application entry point" in r for r in go_ep.reasons)
+

@@ -45,14 +45,41 @@ class OnboardingPlanner:
         phases: list[OnboardingPhase] = []
 
         # Phase 1: 0-3 min (Documentation)
-        root_docs = [
-            f.rel_path
-            for f in self.files
-            if not f.is_binary
-            and Path(f.rel_path).parent.as_posix() == "."
-            and Path(f.rel_path).name.lower().startswith(("readme", "contributing"))
-        ]
-        doc_files = root_docs[:2]
+        exact_readmes = ("readme.md", "readme.rst", "readme.txt", "readme")
+        exact_readme = next(
+            (
+                f.rel_path
+                for f in self.files
+                if not f.is_binary
+                and Path(f.rel_path).parent.as_posix() == "."
+                and Path(f.rel_path).name.lower() in exact_readmes
+            ),
+            None,
+        )
+        contributing_file = next(
+            (
+                f.rel_path
+                for f in self.files
+                if not f.is_binary
+                and Path(f.rel_path).parent.as_posix() == "."
+                and Path(f.rel_path).name.lower().startswith("contributing")
+            ),
+            None,
+        )
+        doc_files: list[str] = []
+        if exact_readme:
+            doc_files.append(exact_readme)
+        if contributing_file and contributing_file not in doc_files:
+            doc_files.append(contributing_file)
+        if not doc_files:
+            root_docs = [
+                f.rel_path
+                for f in self.files
+                if not f.is_binary
+                and Path(f.rel_path).parent.as_posix() == "."
+                and Path(f.rel_path).name.lower().startswith(("readme", "contributing"))
+            ]
+            doc_files = root_docs[:2]
         if not doc_files:
             doc_files = [
                 f.rel_path

@@ -257,6 +257,7 @@ class FullAnalysisResult:
             "onboarding": self.onboarding.to_dict(),
             "graph": self.graph.to_dict(),
             "files": [f.to_dict() for f in self.scan.files],
+            "modules": {k: v.to_dict() for k, v in self.analyses.items()},
         }
 
 

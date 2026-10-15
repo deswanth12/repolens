@@ -93,3 +93,18 @@ def test_reading_order_excludes_samples_and_fixtures():
         assert not item.rel_path.startswith("samples/")
         assert not item.rel_path.startswith("tests/fixtures/")
 
+
+def test_reading_order_canonical_readme_preferred_over_auxiliary():
+    # In alphabetical order, README-VIM.md comes before README.md
+    files = [
+        FileRecord("README-VIM.md", ".md", "Markdown", FileCategory.DOCUMENTATION, 500),
+        FileRecord("README.md", ".md", "Markdown", FileCategory.DOCUMENTATION, 800),
+        FileRecord("main.go", ".go", "Go", FileCategory.SOURCE, 200),
+    ]
+
+    engine = ReadingOrderEngine(files, [], [])
+    reading_list = engine.generate()
+
+    assert len(reading_list) >= 1
+    assert reading_list[0].rel_path == "README.md"
+

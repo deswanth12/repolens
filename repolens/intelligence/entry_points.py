@@ -46,6 +46,12 @@ ENTRYPOINT_FILENAMES = {
     "app.tsx": ("Frontend UI", "Standard React/TypeScript application root component"),
     "server.js": ("Server", "Node.js server entry point"),
     "server.ts": ("Server", "TypeScript server entry point"),
+    "main.go": ("Application", "Standard Go application entry point (package main)"),
+    "main.rs": ("Application", "Standard Rust binary entry point (fn main)"),
+    "main.c": ("Application", "Standard C application entry point (main)"),
+    "main.cpp": ("Application", "Standard C++ application entry point (main)"),
+    "main.cc": ("Application", "Standard C++ application entry point (main)"),
+    "Main.java": ("Application", "Standard Java application entry point (main)"),
 }
 
 CLI_DECORATOR_MARKERS = {"click.command", "click.group", "command", "group"}

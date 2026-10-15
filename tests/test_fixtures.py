@@ -90,4 +90,6 @@ def test_fixture_unsupported():
     assert result.scan.summary.total_files == 2
     go_analysis = result.analyses.get("main.go")
     assert go_analysis is not None
-    assert "Structural analysis is limited" in (go_analysis.parse_error or "")
+    assert go_analysis.parse_error is None
+    assert go_analysis.analysis_mode == "regex_fallback"
+    assert any("Structural analysis is limited" in w for w in go_analysis.warnings)

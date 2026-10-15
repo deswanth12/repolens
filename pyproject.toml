@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "repolens-toolkit"
-version = "0.1.1"
+version = "0.1.2"
 description = "Understand how a codebase works."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -61,6 +61,7 @@ dev = [
 
 [project.scripts]
 repolens = "repolens.cli:main"
+repolens-toolkit = "repolens.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

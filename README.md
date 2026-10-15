@@ -13,7 +13,7 @@
   <a href="https://pypi.org/project/repolens-toolkit/"><img src="https://img.shields.io/pypi/v/repolens-toolkit.svg" alt="PyPI Version"></a>
   <a href="https://pypi.org/project/repolens-toolkit/"><img src="https://img.shields.io/pypi/dm/repolens-toolkit.svg" alt="PyPI Downloads"></a>
   <a href="https://github.com/deswanth12/repolens/actions/workflows/ci.yml"><img src="https://github.com/deswanth12/repolens/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
-  <a href="https://github.com/deswanth12/repolens/releases"><img src="https://img.shields.io/badge/release-v0.1.1-blue.svg" alt="Release Version"></a>
+  <a href="https://github.com/deswanth12/repolens/releases"><img src="https://img.shields.io/badge/release-v0.1.2-blue.svg" alt="Release Version"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg" alt="Python 3.10+"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-000000.svg" alt="Code style: ruff"></a>
@@ -94,7 +94,7 @@ repolens onboard .
 ```
 
 ```text
-RepoLens v0.1.1 -- Contributor Onboarding: my-project
+RepoLens v0.1.2 -- Contributor Onboarding: my-project
 ------------------------------------------------------------
 YOUR FIRST 30 MINUTES
 A structured, time-boxed roadmap to build a working mental model.
@@ -134,7 +134,7 @@ repolens hotspots .
 ```
 
 ```text
-RepoLens v0.1.1 -- Structural Code Hotspots
+RepoLens v0.1.2 -- Structural Code Hotspots
 ------------------------------------------------------------------------------------------
   Module                         Coupling (In/Out)         Role / Interpretation
   repolens/models.py             26 callers / 0 imports    Foundational module: heavily relied upon across codebase
