@@ -12,32 +12,42 @@ from repolens.models import (
 
 
 def find_cycles(adj: dict[str, list[str]]) -> list[list[str]]:
-    """Finds directed circular dependency cycles using DFS."""
+    """Finds directed circular dependency cycles using iterative DFS (safe against recursion limits)."""
     visited: set[str] = set()
-    rec_stack: list[str] = []
-    rec_set: set[str] = set()
     cycles: list[list[str]] = []
 
-    def dfs(node: str) -> None:
-        visited.add(node)
-        rec_stack.append(node)
-        rec_set.add(node)
+    for start_node in sorted(adj.keys()):
+        if start_node in visited:
+            continue
 
-        for neighbor in adj.get(node, []):
-            if neighbor not in visited:
-                dfs(neighbor)
-            elif neighbor in rec_set:
-                # Cycle detected: extract subpath from neighbor to current
-                cycle_start_idx = rec_stack.index(neighbor)
-                cycle = rec_stack[cycle_start_idx:] + [neighbor]
-                cycles.append(cycle)
+        # Explicit stack maintains (node, next_neighbor_index)
+        stack: list[tuple[str, int]] = [(start_node, 0)]
+        rec_stack: list[str] = [start_node]
+        rec_set: set[str] = {start_node}
+        visited.add(start_node)
 
-        rec_stack.pop()
-        rec_set.remove(node)
+        while stack:
+            current, nbr_idx = stack[-1]
+            neighbors = adj.get(current, [])
 
-    for n in sorted(adj.keys()):
-        if n not in visited:
-            dfs(n)
+            if nbr_idx < len(neighbors):
+                stack[-1] = (current, nbr_idx + 1)
+                neighbor = neighbors[nbr_idx]
+
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    rec_stack.append(neighbor)
+                    rec_set.add(neighbor)
+                    stack.append((neighbor, 0))
+                elif neighbor in rec_set:
+                    # Cycle detected: extract subpath from neighbor to current
+                    cycle_start_idx = rec_stack.index(neighbor)
+                    cycle = rec_stack[cycle_start_idx:] + [neighbor]
+                    cycles.append(cycle)
+            else:
+                stack.pop()
+                rec_stack.pop()
+                rec_set.remove(current)
 
     return cycles
 

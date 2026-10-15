@@ -77,9 +77,25 @@ class PythonAnalyzer(BaseAnalyzer):
             file_record.language == "Python"
             and file_record.category in {FileCategory.SOURCE, FileCategory.TEST}
             and not file_record.is_binary
+            and file_record.size_bytes <= 2 * 1024 * 1024
         )
 
     def analyze(self, file_path: Path, rel_path: str) -> ModuleAnalysis:
+        try:
+            stat = file_path.stat()
+            if stat.st_size > 2 * 1024 * 1024:
+                return ModuleAnalysis(
+                    rel_path=rel_path,
+                    language="Python",
+                    parse_error=f"File size ({stat.st_size} bytes) exceeds maximum AST parse limit (2097152 bytes).",
+                )
+        except OSError as e:
+            return ModuleAnalysis(
+                rel_path=rel_path,
+                language="Python",
+                parse_error=f"Could not read file status: {e}",
+            )
+
         try:
             source = file_path.read_text(encoding="utf-8", errors="replace")
         except Exception as e:

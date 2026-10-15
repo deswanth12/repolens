@@ -23,8 +23,10 @@ cd repolens
 
 # 2. Create and activate a virtual environment
 python -m venv .venv
-# On Windows:
-.venv\Scripts\activate
+# On Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
+# On Windows (Command Prompt):
+.\.venv\Scripts\activate.bat
 # On Linux / macOS:
 source .venv/bin/activate
 

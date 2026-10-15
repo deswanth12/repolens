@@ -25,8 +25,9 @@ from repolens.models import (
     ScanSummary,
 )
 
-# Maximum file size to attempt counting lines (2 MB)
-MAX_LINE_COUNT_SIZE = 2 * 1024 * 1024
+# Maximum file size to attempt counting lines and AST parsing (2 MB)
+MAX_FILE_SIZE = 2 * 1024 * 1024
+MAX_LINE_COUNT_SIZE = MAX_FILE_SIZE
 
 
 class RepositoryScanner:
@@ -72,10 +73,23 @@ class RepositoryScanner:
             except ValueError:
                 continue
 
-            # Prune ignored directories in-place
+            # Prune directory symlinks and ignored directories
             dirs_to_remove = []
             for d in dirs:
+                dir_path = current_dir / d
                 sub_rel = f"{rel_dir}/{d}" if rel_dir != "." else d
+
+                # Do not follow directory symlinks (avoids infinite loops and root escape)
+                if dir_path.is_symlink():
+                    dirs_to_remove.append(d)
+                    try:
+                        resolved_dir = dir_path.resolve(strict=True)
+                        resolved_dir.relative_to(self.root_path)
+                        warnings.append(f"Skipping directory symlink: {sub_rel}")
+                    except (ValueError, OSError, RuntimeError) as e:
+                        warnings.append(f"Skipping directory symlink escaping repository root: {sub_rel} ({e})")
+                    continue
+
                 if self.ignore_filter.is_dir_ignored(d, sub_rel):
                     dirs_to_remove.append(d)
                     ignored_count += 1
@@ -92,6 +106,18 @@ class RepositoryScanner:
                     ignored_count += 1
                     continue
 
+                # Verify file symlinks do not escape repository root or point to non-files
+                if file_path.is_symlink():
+                    try:
+                        resolved_target = file_path.resolve(strict=True)
+                        resolved_target.relative_to(self.root_path)
+                        if not resolved_target.is_file():
+                            warnings.append(f"Skipping non-file symlink: {rel_file}")
+                            continue
+                    except (ValueError, OSError, RuntimeError) as e:
+                        warnings.append(f"Skipping symlink escaping repository root: {rel_file} ({e})")
+                        continue
+
                 try:
                     stat = file_path.stat()
                     size_bytes = stat.st_size
@@ -105,12 +131,17 @@ class RepositoryScanner:
                 category = FileCategory.OTHER if binary else classify_file(rel_file, ext, language)
 
                 line_count = 0
-                if not binary and size_bytes <= MAX_LINE_COUNT_SIZE:
-                    try:
-                        with open(file_path, encoding="utf-8", errors="replace") as fh:
-                            line_count = sum(1 for _ in fh)
-                    except Exception as e:
-                        warnings.append(f"Could not count lines in {rel_file}: {e}")
+                if not binary:
+                    if size_bytes <= MAX_FILE_SIZE:
+                        try:
+                            with open(file_path, encoding="utf-8", errors="replace") as fh:
+                                line_count = sum(1 for _ in fh)
+                        except Exception as e:
+                            warnings.append(f"Could not count lines in {rel_file}: {e}")
+                    else:
+                        warnings.append(
+                            f"File size ({size_bytes} bytes) exceeds limit for {rel_file}; skipped line counting and marked for non-AST handling."
+                        )
 
                 record = FileRecord(
                     rel_path=rel_file,

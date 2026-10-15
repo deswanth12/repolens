@@ -114,3 +114,26 @@ def test_cli_ignore_flag(tmp_path: Path):
     scanned_files = [f["rel_path"] for f in data["files"]]
     assert "main.py" in scanned_files
     assert "secret.py" not in scanned_files
+
+
+def test_cli_invalid_input_returns_nonzero():
+    """Verifies that invalid or non-existent paths return appropriate non-zero exit codes."""
+    runner = CliRunner()
+    result = runner.invoke(main, ["non_existent_directory_12345"])
+    assert result.exit_code != 0
+
+
+def test_cli_unicode_and_spaces_json_output(tmp_path: Path):
+    """Verifies that JSON output remains completely valid when paths contain spaces and Unicode characters."""
+    special_dir = tmp_path / "Repo with spaces & 🚀 unicode"
+    special_dir.mkdir()
+    (special_dir / "módulo_principal.py").write_text("x = 'café'\n", encoding="utf-8")
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["report", str(special_dir), "--format", "json"])
+    assert result.exit_code == 0
+
+    data = json.loads(result.output)
+    assert "summary" in data
+    assert any("módulo_principal.py" in f["rel_path"] for f in data["files"])
+

@@ -175,7 +175,7 @@ repolens map . --format dot | dot -Tpng -o dependencies.png
 ---
 
 ### 5. Machine-Readable JSON for AI Coding Agents & CI/CD
-Compress codebase context by **90%** compared to dumping raw source files into LLM prompts. Feed clean, deterministic structural metadata to AI agents (Claude, Cursor, Copilot, Antigravity):
+Dramatically reduce context window overhead compared to dumping raw source files into LLM prompts. Feed clean, deterministic structural metadata to AI agents (Claude, Cursor, Copilot, Antigravity):
 
 ```bash
 repolens report . --format json > repo-map.json
@@ -218,9 +218,10 @@ uv pip install repolens-toolkit
 
 ### Direct Release Download
 ```bash
-# Install directly from the official GitHub Release wheel
+# Install directly from the verified GitHub Release v0.1.1 asset
 pip install https://github.com/deswanth12/repolens/releases/download/v0.1.1/repolens-0.1.1-py3-none-any.whl
 ```
+*Note: On PyPI, the package is distributed as [`repolens-toolkit`](https://pypi.org/project/repolens-toolkit/) (installing the `repolens` CLI). On GitHub Releases v0.1.1, the attached standalone wheel artifact is `repolens-0.1.1-py3-none-any.whl`.*
 
 ### From Source
 ```bash

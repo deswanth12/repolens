@@ -41,9 +41,29 @@ class FallbackAnalyzer(BaseAnalyzer):
             file_record.language not in SUPPORTED_LANGUAGES
             and file_record.category in {FileCategory.SOURCE, FileCategory.TEST}
             and not file_record.is_binary
+            and file_record.size_bytes <= 2 * 1024 * 1024
         )
 
     def analyze(self, file_path: Path, rel_path: str) -> ModuleAnalysis:
+        lang = detect_language(file_path.suffix, file_path.name)
+        if lang == "Unknown" and file_path.suffix:
+            lang = file_path.suffix.lstrip(".")
+
+        try:
+            stat = file_path.stat()
+            if stat.st_size > 2 * 1024 * 1024:
+                return ModuleAnalysis(
+                    rel_path=rel_path,
+                    language=lang,
+                    symbols=[],
+                    imports=[],
+                    exports=[],
+                    has_main_block=False,
+                    parse_error=f"File size ({stat.st_size} bytes) exceeds maximum parse limit (2097152 bytes).",
+                )
+        except OSError:
+            pass
+
         imports: list[ImportRecord] = []
         try:
             content = file_path.read_text(encoding="utf-8", errors="replace")

@@ -129,3 +129,26 @@ def test_import_resolver_js_relative_and_aliases():
     target4, is_int4 = resolver.resolve("src/App.jsx", imp4)
     assert is_int4 is True
     assert target4 == "src/utils/api.ts"
+
+
+def test_deep_chain_cycle_detection_no_recursion_error():
+    """Verifies that an exceptionally deep dependency chain (3,000 nodes) does not crash recursion limit."""
+    n = 3000
+
+    # 1. Linear chain of 3,000 nodes without cycles
+    adj_linear = {f"node_{i}.py": [f"node_{i+1}.py"] for i in range(n - 1)}
+    adj_linear[f"node_{n-1}.py"] = []
+
+    linear_cycles = find_cycles(adj_linear)
+    assert len(linear_cycles) == 0
+
+    # 2. Cycle of 3,000 nodes
+    adj_cycle = {f"node_{i}.py": [f"node_{i+1}.py"] for i in range(n - 1)}
+    adj_cycle[f"node_{n-1}.py"] = ["node_0.py"]
+
+    cycles = find_cycles(adj_cycle)
+    assert len(cycles) == 1
+    assert len(cycles[0]) == n + 1
+    assert cycles[0][0] == "node_0.py"
+    assert cycles[0][-1] == "node_0.py"
+

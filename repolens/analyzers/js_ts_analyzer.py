@@ -59,19 +59,35 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
             file_record.language in {"JavaScript", "TypeScript"}
             and file_record.category in {FileCategory.SOURCE, FileCategory.TEST}
             and not file_record.is_binary
+            and file_record.size_bytes <= 2 * 1024 * 1024
         )
 
     def analyze(self, file_path: Path, rel_path: str) -> ModuleAnalysis:
+        lang = "TypeScript" if file_path.suffix in {".ts", ".tsx", ".mts", ".cts"} else "JavaScript"
+
+        try:
+            stat = file_path.stat()
+            if stat.st_size > 2 * 1024 * 1024:
+                return ModuleAnalysis(
+                    rel_path=rel_path,
+                    language=lang,
+                    parse_error=f"File size ({stat.st_size} bytes) exceeds maximum AST parse limit (2097152 bytes).",
+                )
+        except OSError as e:
+            return ModuleAnalysis(
+                rel_path=rel_path,
+                language=lang,
+                parse_error=f"Could not read file status: {e}",
+            )
+
         try:
             content = file_path.read_text(encoding="utf-8", errors="replace")
         except Exception as e:
             return ModuleAnalysis(
                 rel_path=rel_path,
-                language="TypeScript" if file_path.suffix in {".ts", ".tsx"} else "JavaScript",
+                language=lang,
                 parse_error=f"Could not read file: {e}",
             )
-
-        lang = "TypeScript" if file_path.suffix in {".ts", ".tsx", ".mts", ".cts"} else "JavaScript"
 
         if TREE_SITTER_AVAILABLE:
             try:
@@ -227,6 +243,8 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
         if re.search(r"\b(app|server)\.listen\(", content) or re.search(r"require\.main\s*===\s*module", content) or re.search(r"\bprogram\.parse\(", content):
             has_main_block = True
 
+        parse_error = "Syntax error or malformed source detected; AST parsed with partial recovery." if root.has_error else None
+
         return ModuleAnalysis(
             rel_path=rel_path,
             language=lang,
@@ -234,6 +252,7 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
             imports=imports,
             exports=exports,
             has_main_block=has_main_block,
+            parse_error=parse_error,
         )
 
     def _analyze_with_regex(self, content: str, rel_path: str, lang: str) -> ModuleAnalysis:
@@ -312,4 +331,5 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
             imports=imports,
             exports=exports,
             has_main_block=has_main_block,
+            parse_error="Analyzed using regex fallback mode.",
         )

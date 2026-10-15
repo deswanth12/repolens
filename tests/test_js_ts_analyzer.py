@@ -88,3 +88,28 @@ func main() {
     rust_analysis = analyzer.analyze(rust_path, "lib.rs")
     assert rust_analysis.language == "Rust"
     assert any("HashMap" in i.module for i in rust_analysis.imports)
+
+
+def test_malformed_javascript_produces_parse_warning_or_fallback(tmp_path: Path):
+    """Verifies that syntactically broken or malformed JavaScript produces an explicit parse_error warning."""
+    malformed_js = """
+    import { unbroken } from './safe';
+    function unclosed( {
+        const x = ;;;
+        return
+    // Missing brackets and illegal tokens
+    """
+    file_path = tmp_path / "broken.js"
+    file_path.write_text(malformed_js, encoding="utf-8")
+
+    analyzer = JavaScriptTypeScriptAnalyzer()
+    analysis = analyzer.analyze(file_path, "broken.js")
+
+    assert analysis.rel_path == "broken.js"
+    assert analysis.language == "JavaScript"
+    # Even on malformed syntax, the analyzer safely records parse_error and doesn't crash
+    assert analysis.parse_error is not None
+    assert "Syntax error" in analysis.parse_error or "regex fallback" in analysis.parse_error
+    # And resiliently extracts valid imports if present
+    assert any(i.module == "./safe" for i in analysis.imports)
+

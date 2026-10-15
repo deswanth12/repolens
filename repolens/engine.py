@@ -13,7 +13,7 @@ from repolens.analyzers.base import BaseAnalyzer
 from repolens.analyzers.fallback_analyzer import FallbackAnalyzer
 from repolens.analyzers.js_ts_analyzer import JavaScriptTypeScriptAnalyzer
 from repolens.analyzers.python_analyzer import PythonAnalyzer
-from repolens.discovery.scanner import RepositoryScanner
+from repolens.discovery.scanner import MAX_FILE_SIZE, RepositoryScanner
 from repolens.graph.builder import DependencyGraphBuilder
 from repolens.intelligence.architecture import ArchitectureInferer
 from repolens.intelligence.entry_points import EntryPointDetector
@@ -25,6 +25,8 @@ from repolens.models import (
     FullAnalysisResult,
     ModuleAnalysis,
 )
+
+MAX_AST_FILE_SIZE = MAX_FILE_SIZE
 
 
 class RepoLensEngine:
@@ -62,6 +64,29 @@ class RepoLensEngine:
         for f in scan_result.files:
             if f.category in {FileCategory.SOURCE, FileCategory.TEST} and not f.is_binary:
                 file_full_path = self.root_path / f.rel_path
+
+                # Defense-in-depth: verify path remains within repository root
+                try:
+                    resolved_file = file_full_path.resolve(strict=True)
+                    resolved_file.relative_to(self.root_path)
+                except (ValueError, OSError):
+                    scan_result.summary.warnings.append(
+                        f"Skipped file escaping repository root: {f.rel_path}"
+                    )
+                    continue
+
+                # Check file size limit before passing to analyzers
+                if f.size_bytes > MAX_AST_FILE_SIZE:
+                    scan_result.summary.warnings.append(
+                        f"Skipped AST analysis for {f.rel_path}: file size ({f.size_bytes} bytes) exceeds limit ({MAX_AST_FILE_SIZE} bytes)."
+                    )
+                    analyses[f.rel_path] = ModuleAnalysis(
+                        rel_path=f.rel_path,
+                        language=f.language,
+                        parse_error=f"File size ({f.size_bytes} bytes) exceeds maximum AST parse limit ({MAX_AST_FILE_SIZE} bytes).",
+                    )
+                    continue
+
                 for analyzer in self.analyzers:
                     if analyzer.can_analyze(f):
                         analysis = analyzer.analyze(file_full_path, f.rel_path)
