@@ -281,27 +281,34 @@ repolens report . --format json | jq '.entry_points'
 
 ---
 
-## 🌐 Supported Languages
+## 🌐 Supported Languages & Analysis Depth
 
-| Language | AST Symbol Extraction | Import & Dependency Resolution | Entry-Point Detection |
-| :--- | :---: | :---: | :---: |
-| **Python** | ✅ Native AST (`ast` stdlib) | ✅ Relative & absolute imports | ✅ High (`__main__`, CLI frameworks, `pyproject.toml`) |
-| **JavaScript** | ✅ Tree-Sitter AST | ✅ ES Modules & CommonJS (`require`) | ✅ High (`package.json`, Express/Fastify/Next.js) |
-| **TypeScript / TSX** | ✅ Tree-Sitter AST | ✅ ES Modules & path aliases | ✅ High (`package.json`, framework entry points) |
-| **Other Languages** | ⚠️ Structural Fallback | ⚠️ Regex import pattern matching | ⚠️ Filename heuristics |
+| Language | AST Symbol Extraction | Import & Dependency Resolution | Entry-Point Detection | Analysis Mode |
+| :--- | :---: | :---: | :---: | :---: |
+| **Python** | ✅ Native AST (`ast` stdlib) | ✅ Relative & absolute imports | ✅ High (`__main__`, CLI frameworks, `pyproject.toml`) | `ast` |
+| **JavaScript** | ✅ Tree-Sitter AST | ✅ ES Modules & CommonJS (`require`) | ✅ High (`package.json`, Express/Fastify/Next.js) | `tree_sitter` |
+| **TypeScript / TSX** | ✅ Tree-Sitter AST | ✅ ES Modules & path aliases | ✅ High (`package.json`, framework entry points) | `tree_sitter` |
+| **Go** | ⚠️ Structural Fallback | ✅ Multi-line & single import extraction | ✅ High (`func main()`, `package main`) | `regex_fallback` |
+| **Rust** | ⚠️ Structural Fallback | ✅ `use` declaration extraction | ✅ High (`fn main()`, `main.rs`) | `regex_fallback` |
+| **Java** | ⚠️ Structural Fallback | ✅ `import` statement extraction | ✅ High (`Main.java`, `main()` methods) | `regex_fallback` |
+| **C / C++** | ⚠️ Structural Fallback | ✅ `#include` header extraction | ✅ High (`main()` function, `main.c/cpp`) | `regex_fallback` |
+| **Other Languages** | ⚠️ Structural Fallback | ⚠️ Regex import pattern matching | ⚠️ Filename heuristics | `regex_fallback` |
 
-*For languages without dedicated AST parsers (such as Go, Rust, Java, C++, C#), RepoLens extracts language statistics and regex-based imports, clearly noting: `"Structural analysis is limited for this language."`*
+*For languages analyzed via fallback, RepoLens surfaces language statistics, imports, and entry points while transparently setting `analysis_mode="regex_fallback"` and noting: `"Structural analysis is limited for this language."`*
 
 ---
 
 ## 🔒 Security & Privacy Guarantees
 
-RepoLens was engineered with strict security boundaries:
+RepoLens was engineered with strict security boundaries and verified against real-world repositories:
 
-- 🛡️ **Zero Runtime Code Execution**: RepoLens parses files strictly as static text using AST grammars. It **never** invokes `eval()`, `exec()`, `__import__()`, setup scripts, or project test suites. Untrusted code cannot execute on your machine.
+- 🛡️ **Zero Runtime Code Execution**: RepoLens parses files strictly as static text using AST grammars. It **never** invokes `eval()`, `exec()`, `__import__()`, setup scripts, or project test suites. Untrusted repository code cannot execute on your machine.
 - 📴 **100% Offline & Private**: Zero telemetry, zero phone-home pings, zero cloud analytics, and zero external API dependencies. RepoLens runs cleanly in air-gapped environments.
+- 🚷 **Symlink & Path Traversal Containment**: Canonical symlink targets are resolved (`resolve(strict=True)`). Symlinks pointing outside the repository root and directory symlinks are safely skipped.
+- ⚡ **Resource Protection**: Files larger than **2 MiB (2,097,152 bytes)** and binary files are skipped from line counting and AST parsing to prevent memory exhaustion.
+- 🔄 **Iterative Dependency Traversal**: Cycle detection uses heap-allocated iterative DFS, eliminating `RecursionError` crashes even on deep cyclic graphs.
 - 🔐 **Secret & Sensitive File Protection**: Automatically excludes `.env`, `*.pem`, `*.key`, `id_rsa`, and sensitive credential files from inspection.
-- ⚡ **Resource Protection**: Large files ($> 2\text{ MB}$) and binary assets are safely skipped to avoid memory spikes or parsing hangs.
+- 📋 **Responsible Disclosure**: See our [Security Policy](SECURITY.md) for vulnerability reporting guidelines and response timelines.
 
 ---
 
@@ -362,6 +369,18 @@ Never. RepoLens requires no API keys, makes no network calls, and collects zero 
 
 ---
 
+## 🤝 Contributing & Community
+
+RepoLens is built in the open, and we welcome contributions from everyone! Whether you are fixing a typo, adding a language analyzer, improving documentation, or optimizing performance, your help is appreciated.
+
+- 🚀 **New to RepoLens?** Check out our curated [**Good First Issues**](https://github.com/deswanth12/repolens/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) designed to help newcomers get started with guided mentorship.
+- 📖 **Contributor Guide**: Read [CONTRIBUTING.md](CONTRIBUTING.md) for full development environment setup, architecture subsystem maps, and pull request testing instructions.
+- 💡 **Feature Ideas & Bug Reports**: Have a suggestion or encountered an issue? Open an issue on our [GitHub Issue Tracker](https://github.com/deswanth12/repolens/issues).
+- 📜 **Community Standards**: We follow the Contributor Covenant. Please review our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+---
+
 ## 📄 License
 
 RepoLens is open-source software licensed under the [MIT License](LICENSE).
+

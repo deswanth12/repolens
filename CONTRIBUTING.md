@@ -35,7 +35,37 @@ pip install -e ".[dev]"
 
 # 4. Run the test suite
 pytest -v
+
+# 5. Check code formatting and style
+ruff check .
+ruff format --check .
+
+# 6. Run static type checking
+mypy repolens
 ```
+
+---
+
+## Architecture & Subsystems
+
+RepoLens is structured as a deterministic pipeline:
+
+```mermaid
+graph TD
+    Scanner["repolens/discovery/scanner.py<br/><b>Filesystem Scanner & Ignore Filters</b>"] --> Analyzers["repolens/analyzers/<br/><b>Static AST & Structural Analyzers</b>"]
+    Analyzers --> Graph["repolens/graph/builder.py<br/><b>Dependency Graph & Cycle Detector</b>"]
+    Graph --> Intelligence["repolens/intelligence/<br/><b>Hotspots, Entry Points, Onboarding</b>"]
+    Intelligence --> Formatters["repolens/formatters/<br/><b>Terminal & JSON Presenters</b>"]
+```
+
+| Subsystem | Location | Responsibility |
+| :--- | :--- | :--- |
+| **Discovery** | `repolens/discovery/` | File traversal, `.gitignore` / `.repolensignore` filtering, binary inspection, and path traversal / symlink boundary enforcement. |
+| **Analyzers** | `repolens/analyzers/` | AST parsing (`PythonAnalyzer`), Tree-sitter extraction (`JsTsAnalyzer`), and fallback regex extraction (`FallbackAnalyzer`). **Zero runtime execution**. |
+| **Graph** | `repolens/graph/` | Directed dependency graph construction, in-degree/out-degree calculation, and iterative DFS cycle detection. |
+| **Intelligence** | `repolens/intelligence/` | Hotspot scoring, architecture layer categorization, entry-point candidate discovery, and onboarding reading order generation. |
+| **Formatters** | `repolens/formatters/` | Rich terminal layout and machine-readable JSON rendering. |
+| **CLI & Engine** | `repolens/cli.py`, `repolens/engine.py` | Command-line option parsing, pipeline orchestration, and `--format text|json` output handling. |
 
 ---
 
@@ -45,6 +75,7 @@ RepoLens uses a pluggable analyzer architecture:
 
 1. Subclass `BaseAnalyzer` in `repolens/analyzers/`:
    ```python
+   from pathlib import Path
    from repolens.analyzers.base import BaseAnalyzer
    from repolens.models import FileRecord, ModuleAnalysis
 
@@ -68,11 +99,22 @@ RepoLens uses a pluggable analyzer architecture:
 
 ## Pull Request Guidelines
 
-1. **Keep Pull Requests Focused**: One logical feature or bug fix per PR.
-2. **Add Tests**: All new functionality must include tests covering both normal execution and malformed input.
-3. **Verify Existing Tests**: Run `pytest -v` to ensure no regressions.
-4. **Follow Design Principles**:
-   - Evidence over speculation.
-   - Deterministic before AI.
-   - Zero execution of user repository code.
-   - Resilient on Windows, macOS, and Linux terminals.
+Before opening a pull request, please verify your changes pass all quality gates locally:
+
+```bash
+# 1. Run full test suite
+pytest -v
+
+# 2. Verify linting and formatting
+ruff check .
+ruff format --check .
+
+# 3. Verify static types
+mypy repolens
+```
+
+### Review Principles
+1. **Evidence over speculation**: Every score or recommendation must point to deterministic code evidence.
+2. **Zero execution**: Never execute user repository code or import analyzed files.
+3. **Resilience**: Never crash on malformed syntax, broken symlinks, circular imports, or massive files.
+4. **Focused PRs**: One logical feature or fix per pull request with comprehensive regression tests.
