@@ -91,4 +91,6 @@ class FallbackAnalyzer(BaseAnalyzer):
             exports=[],
             has_main_block=False,
             parse_error="Structural analysis is limited for this language.",
+            analysis_mode="regex_fallback",
+            warnings=["Structural analysis is limited for this language."],
         )

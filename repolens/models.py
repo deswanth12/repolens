@@ -78,6 +78,8 @@ class ModuleAnalysis:
     exports: list[str] = field(default_factory=list)
     has_main_block: bool = False
     parse_error: str | None = None
+    analysis_mode: str = "ast"  # "ast", "tree_sitter", "regex_fallback"
+    warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -88,6 +90,8 @@ class ModuleAnalysis:
             "exports": self.exports,
             "has_main_block": self.has_main_block,
             "parse_error": self.parse_error,
+            "analysis_mode": self.analysis_mode,
+            "warnings": self.warnings,
         }
 
 

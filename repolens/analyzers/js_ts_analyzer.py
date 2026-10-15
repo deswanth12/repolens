@@ -244,6 +244,7 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
             has_main_block = True
 
         parse_error = "Syntax error or malformed source detected; AST parsed with partial recovery." if root.has_error else None
+        warnings = ["Syntax error or malformed source detected; AST parsed with partial recovery."] if root.has_error else []
 
         return ModuleAnalysis(
             rel_path=rel_path,
@@ -253,6 +254,8 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
             exports=exports,
             has_main_block=has_main_block,
             parse_error=parse_error,
+            analysis_mode="tree_sitter",
+            warnings=warnings,
         )
 
     def _analyze_with_regex(self, content: str, rel_path: str, lang: str) -> ModuleAnalysis:
@@ -331,5 +334,7 @@ class JavaScriptTypeScriptAnalyzer(BaseAnalyzer):
             imports=imports,
             exports=exports,
             has_main_block=has_main_block,
-            parse_error="Analyzed using regex fallback mode.",
+            parse_error=None,
+            analysis_mode="regex_fallback",
+            warnings=["Analyzed using regex fallback mode (Tree-sitter AST was unavailable or interrupted)."],
         )

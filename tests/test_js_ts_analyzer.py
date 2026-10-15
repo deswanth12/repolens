@@ -113,3 +113,37 @@ def test_malformed_javascript_produces_parse_warning_or_fallback(tmp_path: Path)
     # And resiliently extracts valid imports if present
     assert any(i.module == "./safe" for i in analysis.imports)
 
+
+def test_valid_file_analyzed_with_regex_fallback_has_no_parse_error(tmp_path: Path):
+    """Verifies that a valid JS file analyzed via regex fallback mode has parse_error=None and analysis_mode='regex_fallback'."""
+    valid_js = """
+    import { Router } from 'express';
+    import { helper } from './utils';
+
+    export class ApiRouter {
+        constructor() {}
+    }
+
+    export function createServer() {
+        return true;
+    }
+    """
+    file_path = tmp_path / "valid.js"
+    file_path.write_text(valid_js, encoding="utf-8")
+
+    analyzer = JavaScriptTypeScriptAnalyzer()
+    # Explicitly test the regex fallback pathway
+    analysis = analyzer._analyze_with_regex(valid_js, "valid.js", "JavaScript")
+
+    assert analysis.rel_path == "valid.js"
+    assert analysis.language == "JavaScript"
+    assert analysis.analysis_mode == "regex_fallback"
+    assert analysis.parse_error is None, "Regex fallback on valid source must NOT be marked as a parse error!"
+    assert len(analysis.warnings) >= 1
+    assert "regex fallback" in analysis.warnings[0].lower()
+    assert any(i.module == "express" for i in analysis.imports)
+    assert any(i.module == "./utils" for i in analysis.imports)
+    assert any(s.name == "ApiRouter" for s in analysis.symbols)
+    assert any(s.name == "createServer" for s in analysis.symbols)
+
+
