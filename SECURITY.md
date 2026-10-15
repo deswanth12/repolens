@@ -34,7 +34,8 @@ RepoLens is built with a **strict zero-execution, local-first security model**:
 
 If you discover a security vulnerability in RepoLens, please report it privately:
 
-- **Email**: `security@repolens.dev` (or open a confidential GitHub Security Advisory on `deswanth12/repolens`)
+- **Primary**: Open a confidential [GitHub Security Advisory](https://github.com/deswanth12/repolens/security/advisories/new).
+- **Direct Contact**: Email the maintainer directly at `deswanth12@gmail.com`.
 - Please include:
   - A description of the issue.
   - A minimal reproducing repository or test fixture.
