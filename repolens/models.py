@@ -261,6 +261,241 @@ class FullAnalysisResult:
         }
 
 
+REPORT_JSON_SCHEMA: dict[str, Any] = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "RepoLens Full Analysis Report",
+    "description": "Shape of the JSON emitted by `repolens --format json` / `repolens report --format json`, i.e. FullAnalysisResult.to_dict().",
+    "type": "object",
+    "required": [
+        "summary",
+        "entry_points",
+        "reading_order",
+        "hotspots",
+        "architecture",
+        "onboarding",
+        "graph",
+        "files",
+        "modules",
+    ],
+    "properties": {
+        "summary": {
+            "type": "object",
+            "description": "High-level repository scan summary (ScanSummary).",
+            "properties": {
+                "root_path": {"type": "string"},
+                "project_name": {"type": "string"},
+                "is_git": {"type": "boolean"},
+                "total_files": {"type": "integer"},
+                "source_files": {"type": "integer"},
+                "test_files": {"type": "integer"},
+                "doc_files": {"type": "integer"},
+                "config_files": {"type": "integer"},
+                "total_lines": {"type": "integer"},
+                "primary_language": {"type": "string"},
+                "languages": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "language": {"type": "string"},
+                            "file_count": {"type": "integer"},
+                            "line_count": {"type": "integer"},
+                            "percentage": {"type": "number"},
+                        },
+                    },
+                },
+                "ignored_count": {"type": "integer"},
+                "warnings": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+        "entry_points": {
+            "type": "array",
+            "description": "Detected application entry points (EntryPointRecord).",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "rel_path": {"type": "string"},
+                    "reasons": {"type": "array", "items": {"type": "string"}},
+                    "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+                    "category": {"type": "string"},
+                },
+            },
+        },
+        "reading_order": {
+            "type": "array",
+            "description": "Recommended file reading order (ReadingOrderItem).",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "order": {"type": "integer"},
+                    "rel_path": {"type": "string"},
+                    "category": {"type": "string"},
+                    "purpose": {"type": "string"},
+                },
+            },
+        },
+        "hotspots": {
+            "type": "array",
+            "description": "Architecturally significant modules (HotspotRecord).",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "rel_path": {"type": "string"},
+                    "dependent_count": {"type": "integer"},
+                    "dependency_count": {"type": "integer"},
+                    "symbol_count": {"type": "integer"},
+                    "connectivity": {"type": "integer"},
+                    "reasons": {"type": "array", "items": {"type": "string"}},
+                    "interpretation": {"type": "string"},
+                },
+            },
+        },
+        "architecture": {
+            "type": "array",
+            "description": "Inferred architectural layers (ArchitecturalLayer).",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "layer_name": {"type": "string"},
+                    "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+                    "files": {"type": "array", "items": {"type": "string"}},
+                    "evidence": {"type": "array", "items": {"type": "string"}},
+                },
+            },
+        },
+        "onboarding": {
+            "type": "object",
+            "description": "30-minute contributor onboarding plan (OnboardingPlan).",
+            "properties": {
+                "project_name": {"type": "string"},
+                "phases": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "time_window": {"type": "string"},
+                            "focus": {"type": "string"},
+                            "target_files": {"type": "array", "items": {"type": "string"}},
+                            "takeaway": {"type": "string"},
+                        },
+                    },
+                },
+                "summary_notes": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+        "graph": {
+            "type": "object",
+            "description": "Internal module dependency graph (DependencyGraph).",
+            "properties": {
+                "nodes": {
+                    "type": "object",
+                    "description": "Map of rel_path -> ModuleNode.",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "rel_path": {"type": "string"},
+                            "language": {"type": "string"},
+                            "dependencies": {"type": "array", "items": {"type": "string"}},
+                            "dependents": {"type": "array", "items": {"type": "string"}},
+                            "external_dependencies": {"type": "array", "items": {"type": "string"}},
+                            "dependency_count": {"type": "integer"},
+                            "dependent_count": {"type": "integer"},
+                            "connectivity": {"type": "integer"},
+                            "symbol_count": {"type": "integer"},
+                        },
+                    },
+                },
+                "edges": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "source": {"type": "string"},
+                            "target": {"type": "string"},
+                            "is_internal": {"type": "boolean"},
+                            "line_number": {"type": "integer"},
+                            "imported_symbols": {"type": "array", "items": {"type": "string"}},
+                        },
+                    },
+                },
+                "cycles": {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "string"}},
+                },
+            },
+        },
+        "files": {
+            "type": "array",
+            "description": "Every discovered file in the repository (FileRecord).",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "rel_path": {"type": "string"},
+                    "extension": {"type": "string"},
+                    "language": {"type": "string"},
+                    "category": {
+                        "type": "string",
+                        "enum": ["source", "test", "documentation", "configuration", "build", "other"],
+                    },
+                    "size_bytes": {"type": "integer"},
+                    "line_count": {"type": "integer"},
+                    "is_binary": {"type": "boolean"},
+                },
+            },
+        },
+        "modules": {
+            "type": "object",
+            "description": "Map of rel_path -> ModuleAnalysis for every analyzed source file.",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "rel_path": {"type": "string"},
+                    "language": {"type": "string"},
+                    "symbols": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "symbol_type": {
+                                    "type": "string",
+                                    "enum": ["function", "async_function", "class", "method"],
+                                },
+                                "line_number": {"type": "integer"},
+                                "end_line_number": {"type": "integer"},
+                                "parent_symbol": {"type": ["string", "null"]},
+                                "decorators": {"type": "array", "items": {"type": "string"}},
+                                "docstring": {"type": ["string", "null"]},
+                                "base_classes": {"type": "array", "items": {"type": "string"}},
+                            },
+                        },
+                    },
+                    "imports": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "module": {"type": "string"},
+                                "imported_names": {"type": "array", "items": {"type": "string"}},
+                                "alias": {"type": ["string", "null"]},
+                                "is_from": {"type": "boolean"},
+                                "level": {"type": "integer"},
+                                "line_number": {"type": "integer"},
+                            },
+                        },
+                    },
+                    "exports": {"type": "array", "items": {"type": "string"}},
+                    "has_main_block": {"type": "boolean"},
+                    "parse_error": {"type": ["string", "null"]},
+                    "analysis_mode": {"type": "string", "enum": ["ast", "tree_sitter", "regex_fallback"]},
+                    "warnings": {"type": "array", "items": {"type": "string"}},
+                },
+            },
+        },
+    },
+}
+
+
 @dataclass
 class DependencyGraph:
     """Directed dependency graph across repository modules."""

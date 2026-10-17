@@ -29,6 +29,34 @@ def test_cli_help():
     assert "explain" in result.output
 
 
+def test_cli_schema_flag():
+    runner = CliRunner()
+    result = runner.invoke(main, ["--schema"])
+    assert result.exit_code == 0
+
+    schema = json.loads(result.output)
+    assert schema["$schema"] == "http://json-schema.org/draft-07/schema#"
+    assert schema["type"] == "object"
+    for prop in ("summary", "entry_points", "reading_order", "hotspots", "architecture", "onboarding", "graph", "files", "modules"):
+        assert prop in schema["properties"]
+        assert prop in schema["required"]
+
+
+def test_cli_schema_flag_matches_report_shape(tmp_path: Path):
+    (tmp_path / "README.md").write_text("# Test Repo\n", encoding="utf-8")
+    (tmp_path / "main.py").write_text("def run():\n    pass\n", encoding="utf-8")
+
+    runner = CliRunner()
+    schema_result = runner.invoke(main, ["--schema"])
+    report_result = runner.invoke(main, ["--format", "json", str(tmp_path)])
+    assert schema_result.exit_code == 0
+    assert report_result.exit_code == 0
+
+    schema = json.loads(schema_result.output)
+    report = json.loads(report_result.output)
+    assert set(schema["required"]) == set(report.keys())
+
+
 def test_cli_full_report_terminal(tmp_path: Path):
     (tmp_path / "README.md").write_text("# Test Repo\n", encoding="utf-8")
     (tmp_path / "main.py").write_text("def run():\n    pass\nif __name__ == '__main__':\n    run()\n", encoding="utf-8")
