@@ -252,6 +252,7 @@ pip install -e ".[dev]"
 - `--json`: Output machine-readable JSON across all commands.
 - `-i, --ignore <pattern>`: Add custom glob ignore patterns (e.g. `-i "legacy/**"`). Can be specified multiple times.
 - `--no-gitignore`: Bypass `.gitignore` rules and include ignored files in analysis.
+- `--no-color`: Disable ANSI colour, for logs, redirection and accessibility tooling. `NO_COLOR=1` and `TERM=dumb` have the same effect.
 - `--version`: Display version information and exit.
 - `--help`: Show CLI help and options.
 

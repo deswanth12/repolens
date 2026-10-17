@@ -11,7 +11,6 @@ import sys
 from pathlib import Path
 
 import click
-from rich.console import Console
 
 from repolens import __version__
 from repolens.discovery.scanner import RepositoryScanner
@@ -24,9 +23,10 @@ from repolens.formatters import (
     to_dot,
     to_mermaid,
 )
+from repolens.terminal import make_console, no_color_option
 
-console = Console(legacy_windows=False)
-err_console = Console(stderr=True, legacy_windows=False)
+console = make_console()
+err_console = make_console(stderr=True)
 
 
 class RepoLensGroup(click.Group):
@@ -72,6 +72,7 @@ class RepoLensGroup(click.Group):
 )
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
+@no_color_option
 @click.version_option(version=__version__, prog_name="repolens")
 @click.pass_context
 def main(
@@ -101,6 +102,7 @@ def main(
 @click.option("--json", "json_output", is_flag=True, help="Output machine-readable JSON.")
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
+@no_color_option
 @click.pass_context
 def scan_cmd(
     ctx: click.Context,
@@ -123,6 +125,7 @@ def scan_cmd(
 @click.option("--json", "json_output", is_flag=True, help="Output machine-readable JSON.")
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
+@no_color_option
 @click.pass_context
 def onboard_cmd(
     ctx: click.Context,
@@ -148,6 +151,7 @@ def onboard_cmd(
 @click.option("--json", "json_output", is_flag=True, help="Output machine-readable JSON.")
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
+@no_color_option
 @click.pass_context
 def hotspots_cmd(
     ctx: click.Context,
@@ -179,6 +183,7 @@ def hotspots_cmd(
 )
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
+@no_color_option
 def map_cmd(path: str, fmt: str, custom_ignores: tuple[str, ...], no_gitignore: bool) -> None:
     """Generate visual module dependency graph."""
     target = Path(path).resolve()
@@ -199,6 +204,7 @@ def map_cmd(path: str, fmt: str, custom_ignores: tuple[str, ...], no_gitignore: 
 @click.option("--json", "json_output", is_flag=True, help="Output machine-readable JSON.")
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
+@no_color_option
 def explain_cmd(
     file_path: str,
     repo: str,
@@ -238,6 +244,7 @@ def explain_cmd(
 )
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
+@no_color_option
 def report_cmd(
     path: str,
     fmt: str,
