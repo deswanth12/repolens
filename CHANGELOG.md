@@ -5,6 +5,12 @@ All notable changes to **RepoLens** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **AI Agent Context Pack (`repolens context`)**: Added `repolens context [PATH] [-o AGENTS.md]` command to generate dense, token-efficient Markdown context packs (~1,500 tokens) designed specifically to ground AI coding assistants (Claude Code, Cursor, Copilot, ChatGPT, Antigravity) with an accurate architectural mental model without prompt bloat.
+- **Markdown Export Format (`--format markdown`)**: Added `--format markdown` option across `repolens [PATH]` and `repolens report [PATH]`, outputting clean GitHub Flavored Markdown with embedded Mermaid dependency diagrams.
+
 ## [0.1.2] - 2026-10-15
 
 ### Fixed

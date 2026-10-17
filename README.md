@@ -202,6 +202,28 @@ repolens report . --format json > repo-map.json
 
 ---
 
+### 6. AI Agent Context Pack (`repolens context`)
+Ground AI coding assistants (Claude Code, Cursor, GitHub Copilot, ChatGPT, Antigravity) with an accurate, deterministic architectural mental model in seconds. Generates a dense, token-optimized Markdown context pack (~1,500 tokens) that eliminates context hallucinations and token bloat:
+
+```bash
+# Generate context pack and save directly to AGENTS.md / CLAUDE.md
+repolens context . -o AGENTS.md
+
+# Or inspect the generated context pack directly in terminal stdout
+repolens context .
+```
+
+The generated context pack automatically extracts:
+- **Project Profile & Scale**: Detected languages, file counts, and SLOC volume.
+- **Entry Points & Wiring**: Application entry points with detection confidence and rationale.
+- **Inferred Architecture**: Identified tiers (CLI, Core Engine, Analysis, Data Models).
+- **Architectural Hotspots**: High-connectivity modules, coupling ratios, and exported symbols.
+- **Recommended Reading Sequence**: Step-by-step reading order to onboard into the codebase.
+- **Module Dependency Map**: Embedded Mermaid dependency diagram.
+- **Agent Guardrails & Invariants**: Architectural cycle warnings and blast radius indicators.
+
+---
+
 ## 📦 Installation Options
 
 ### Standard Installation
@@ -240,13 +262,14 @@ pip install -e ".[dev]"
 
 | Command | Usage | Description |
 | :--- | :--- | :--- |
-| **`repolens`** | `repolens [PATH]` | Comprehensive codebase overview (entry points, layers, hotspots, reading order). |
+| **`repolens`** | `repolens [PATH] [--format text\|json\|markdown]` | Comprehensive codebase overview (entry points, layers, hotspots, reading order). |
+| **`repolens context`** | `repolens context [PATH] [-o AGENTS.md]` | Dense, token-optimized Markdown context pack for AI coding assistants. |
 | **`repolens onboard`** | `repolens onboard [PATH]` | Generate the "Your First 30 Minutes" structured contributor guide. |
 | **`repolens hotspots`** | `repolens hotspots [PATH]` | Inspect module connectivity table (callers, dependencies, structural role). |
 | **`repolens map`** | `repolens map [PATH] [--format mermaid\|dot\|json]` | Output module dependency graph for visualization. |
 | **`repolens explain`** | `repolens explain <FILE> [--repo PATH]` | Deep-dive into a specific file: extracted symbols, incoming callers, and dependencies. |
 | **`repolens scan`** | `repolens scan [PATH]` | Fast file discovery pass with language distribution and category breakdown. |
-| **`repolens report`** | `repolens report [PATH] [--format text\|json]` | Complete codebase understanding report. |
+| **`repolens report`** | `repolens report [PATH] [--format text\|json\|markdown]` | Complete codebase understanding report. |
 
 ### Global Options
 - `--json`: Output machine-readable JSON across all commands.
@@ -266,16 +289,19 @@ repolens .
 # 2. Onboard a new team member to a monorepo service
 repolens onboard packages/backend
 
-# 3. Export dependency architecture to documentation
+# 3. Generate an instant context pack for Claude Code, Cursor, or Copilot
+repolens context . -o AGENTS.md
+
+# 4. Export dependency architecture to documentation
 repolens map . --format mermaid >> docs/ARCHITECTURE.md
 
-# 4. Investigate why a core module is frequently touched
+# 5. Investigate why a core module is frequently touched
 repolens explain repolens/engine.py
 
-# 5. Filter out third-party or vendored paths
+# 6. Filter out third-party or vendored paths
 repolens . -i "vendor/**" -i "external/**" -i "fixtures/**"
 
-# 6. Pipe clean architecture metadata to an LLM script or CI runner
+# 7. Pipe clean architecture metadata to an LLM script or CI runner
 repolens report . --format json | jq '.entry_points'
 ```
 
