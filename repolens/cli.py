@@ -17,6 +17,7 @@ from repolens import __version__
 from repolens.discovery.scanner import RepositoryScanner
 from repolens.engine import RepoLensEngine
 from repolens.formatters import (
+    format_ai_context,
     format_file_explanation,
     format_full_report,
     format_hotspots_report,
@@ -66,9 +67,9 @@ class RepoLensGroup(click.Group):
 @click.option(
     "--format",
     "fmt",
-    type=click.Choice(["text", "json"], case_sensitive=False),
+    type=click.Choice(["text", "json", "markdown"], case_sensitive=False),
     default=None,
-    help="Report format (text, json).",
+    help="Report format (text, json, markdown).",
 )
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
@@ -88,9 +89,11 @@ def main(
     """
     if ctx.invoked_subcommand is None:
         effective_json = json_output or (fmt == "json") or ctx.params.get("json_output", False)
+        effective_fmt = "json" if effective_json else (fmt or "text")
         run_full_analysis(
             path=path,
             json_output=effective_json,
+            format_type=effective_fmt,
             custom_ignores=custom_ignores,
             respect_gitignore=not no_gitignore,
         )
@@ -227,14 +230,57 @@ def explain_cmd(
         format_file_explanation(norm_path, result)
 
 
+@main.command(name="context")
+@click.argument("path", default=".", required=False, type=click.Path(exists=True, file_okay=False, dir_okay=True))
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    type=click.Path(dir_okay=False, writable=True),
+    default=None,
+    help="Output file path (e.g. AGENTS.md, CONTEXT.md).",
+)
+@click.option("--mermaid/--no-mermaid", default=True, help="Include Mermaid architecture diagram.")
+@click.option("--hotspots-limit", default=7, type=int, help="Maximum number of hotspots to describe in detail.")
+@click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
+@click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
+def context_cmd(
+    path: str,
+    output_file: str | None,
+    mermaid: bool,
+    hotspots_limit: int,
+    custom_ignores: tuple[str, ...],
+    no_gitignore: bool,
+) -> None:
+    """Generate dense, token-efficient AI context pack (e.g. AGENTS.md)."""
+    target = Path(path).resolve()
+    try:
+        engine = RepoLensEngine(target, custom_ignores=custom_ignores, respect_gitignore=not no_gitignore)
+        result = engine.analyze()
+    except Exception as e:
+        err_console.print(f"[bold red]Error during analysis:[/bold red] {e}")
+        sys.exit(1)
+
+    content = format_ai_context(result, include_mermaid=mermaid, max_hotspots=hotspots_limit)
+
+    if output_file:
+        out_path = Path(output_file).resolve()
+        out_path.write_text(content, encoding="utf-8")
+        console.print(
+            f"[bold green]Success:[/bold green] Wrote AI Context Pack to [bold cyan]{output_file}[/bold cyan] ({len(content.splitlines())} lines)."
+        )
+    else:
+        click.echo(content)
+
+
 @main.command(name="report")
 @click.argument("path", default=".", required=False, type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option(
     "--format",
     "fmt",
-    type=click.Choice(["text", "json"], case_sensitive=False),
+    type=click.Choice(["text", "json", "markdown"], case_sensitive=False),
     default="text",
-    help="Report format (text, json).",
+    help="Report format (text, json, markdown).",
 )
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
@@ -248,6 +294,7 @@ def report_cmd(
     run_full_analysis(
         path=path,
         json_output=(fmt == "json"),
+        format_type=fmt,
         custom_ignores=custom_ignores,
         respect_gitignore=not no_gitignore,
     )
@@ -255,7 +302,8 @@ def report_cmd(
 
 def run_full_analysis(
     path: str,
-    json_output: bool,
+    json_output: bool = False,
+    format_type: str | None = None,
     custom_ignores: tuple[str, ...] | list[str] | None = None,
     respect_gitignore: bool = True,
 ) -> None:
@@ -267,8 +315,12 @@ def run_full_analysis(
         err_console.print(f"[bold red]Error during analysis:[/bold red] {e}")
         sys.exit(1)
 
-    if json_output:
+    effective_fmt = format_type or ("json" if json_output else "text")
+
+    if effective_fmt == "json":
         click.echo(json.dumps(result.to_dict(), indent=2))
+    elif effective_fmt in ("markdown", "md"):
+        click.echo(format_ai_context(result))
     else:
         format_full_report(result)
 

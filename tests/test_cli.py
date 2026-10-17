@@ -165,3 +165,54 @@ def test_cli_root_format_option(tmp_path: Path):
     assert "modules" in data
     assert "app.py" in data["modules"]
 
+
+def test_cli_context_stdout(tmp_path: Path):
+    """Verifies that repolens context outputs markdown to stdout."""
+    (tmp_path / "README.md").write_text("# Test Repo\n", encoding="utf-8")
+    (tmp_path / "app.py").write_text("def run(): pass\n", encoding="utf-8")
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["context", str(tmp_path)])
+    assert result.exit_code == 0
+    assert "# Codebase Intelligence:" in result.output
+    assert "## 1. Project Profile & Scale" in result.output
+    assert "## 2. Application Entry Points" in result.output
+    assert "## 7. AI Agent Guardrails & Invariants" in result.output
+
+
+def test_cli_context_output_file(tmp_path: Path):
+    """Verifies that repolens context -o writes file to disk."""
+    (tmp_path / "app.py").write_text("print('test')\n", encoding="utf-8")
+    out_file = tmp_path / "AGENTS.md"
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["context", str(tmp_path), "-o", str(out_file)])
+    assert result.exit_code == 0
+    assert "Wrote AI Context Pack" in result.output
+    assert out_file.exists()
+
+    content = out_file.read_text(encoding="utf-8")
+    assert "# Codebase Intelligence:" in content
+    assert "## 1. Project Profile & Scale" in content
+
+
+def test_cli_report_markdown(tmp_path: Path):
+    """Verifies that repolens report --format markdown produces markdown output."""
+    (tmp_path / "app.py").write_text("def fn(): pass\n", encoding="utf-8")
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["report", str(tmp_path), "--format", "markdown"])
+    assert result.exit_code == 0
+    assert "# Codebase Intelligence:" in result.output
+    assert "## 1. Project Profile & Scale" in result.output
+
+
+def test_cli_root_format_markdown(tmp_path: Path):
+    """Verifies that the root CLI accepts --format markdown directly."""
+    (tmp_path / "app.py").write_text("def fn(): pass\n", encoding="utf-8")
+
+    runner = CliRunner()
+    result = runner.invoke(main, [str(tmp_path), "--format", "markdown"])
+    assert result.exit_code == 0
+    assert "# Codebase Intelligence:" in result.output
+
