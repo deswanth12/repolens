@@ -6,7 +6,6 @@ Safe for all terminal encodings (ASCII-resilient).
 
 from __future__ import annotations
 
-from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
@@ -17,9 +16,10 @@ from repolens.models import (
     OnboardingPlan,
     RepositoryScanResult,
 )
+from repolens.terminal import make_console
 
-console = Console(legacy_windows=False)
-err_console = Console(stderr=True, legacy_windows=False)
+console = make_console()
+err_console = make_console(stderr=True)
 
 
 def print_divider() -> None:
