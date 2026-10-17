@@ -8,6 +8,8 @@ from click.testing import CliRunner
 from repolens import __version__
 from repolens.cli import main
 
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+
 
 def test_cli_version():
     runner = CliRunner()
@@ -27,6 +29,102 @@ def test_cli_help():
     assert "hotspots" in result.output
     assert "map" in result.output
     assert "explain" in result.output
+
+
+def test_cli_schema_flag():
+    runner = CliRunner()
+    result = runner.invoke(main, ["--schema"])
+    assert result.exit_code == 0
+
+    schema = json.loads(result.output)
+    assert schema["$schema"] == "http://json-schema.org/draft-07/schema#"
+    assert schema["type"] == "object"
+    for prop in ("summary", "entry_points", "reading_order", "hotspots", "architecture", "onboarding", "graph", "files", "modules"):
+        assert prop in schema["properties"]
+        assert prop in schema["required"]
+
+
+_JSON_TYPES = {
+    "string": lambda v: isinstance(v, str),
+    "integer": lambda v: isinstance(v, int) and not isinstance(v, bool),
+    "number": lambda v: isinstance(v, (int, float)) and not isinstance(v, bool),
+    "boolean": lambda v: isinstance(v, bool),
+    "array": lambda v: isinstance(v, list),
+    "object": lambda v: isinstance(v, dict),
+    "null": lambda v: v is None,
+}
+
+
+def _schema_violations(schema: dict, value, path: str = "$") -> list[str]:
+    """Check `value` against the subset of JSON Schema REPORT_JSON_SCHEMA uses.
+
+    Beyond plain validation, an object key the schema does not declare is also
+    reported, so a field added to a `to_dict()` without a schema update fails.
+    """
+    errors = []
+    types = schema.get("type")
+    if types is not None:
+        types = types if isinstance(types, list) else [types]
+        if not any(_JSON_TYPES[t](value) for t in types):
+            return [f"{path}: expected {types}, got {type(value).__name__}"]
+    if "enum" in schema and value not in schema["enum"]:
+        errors.append(f"{path}: {value!r} not in {schema['enum']}")
+    if isinstance(value, dict):
+        props = schema.get("properties")
+        for key in schema.get("required", []):
+            if key not in value:
+                errors.append(f"{path}: missing required '{key}'")
+        if props is not None:
+            for key, sub in value.items():
+                if key not in props:
+                    errors.append(f"{path}: undeclared field '{key}'")
+                else:
+                    errors += _schema_violations(props[key], sub, f"{path}.{key}")
+        elif isinstance(schema.get("additionalProperties"), dict):
+            for key, sub in value.items():
+                errors += _schema_violations(schema["additionalProperties"], sub, f"{path}[{key!r}]")
+    if isinstance(value, list) and isinstance(schema.get("items"), dict):
+        for i, item in enumerate(value):
+            errors += _schema_violations(schema["items"], item, f"{path}[{i}]")
+    return errors
+
+
+def _schema_and_layered_report():
+    runner = CliRunner()
+    schema_result = runner.invoke(main, ["--schema"])
+    report_result = runner.invoke(main, ["--format", "json", str(FIXTURES_DIR / "python_layered")])
+    assert schema_result.exit_code == 0
+    assert report_result.exit_code == 0
+    return json.loads(schema_result.output), json.loads(report_result.output)
+
+
+def test_cli_schema_matches_full_report_structure():
+    schema, report = _schema_and_layered_report()
+
+    # The fixture must exercise the nested schemas, not just empty lists.
+    assert report["files"] and report["modules"] and report["graph"]["nodes"]
+    assert report["architecture"] and report["hotspots"]
+
+    assert _schema_violations(schema, report) == []
+
+
+def test_cli_schema_rejects_incomplete_nested_object():
+    schema, report = _schema_and_layered_report()
+    module = next(iter(report["modules"]))
+    del report["summary"]["total_files"]
+    del report["modules"][module]["imports"]
+
+    assert _schema_violations(schema, report) == [
+        "$.summary: missing required 'total_files'",
+        f"$.modules[{module!r}]: missing required 'imports'",
+    ]
+
+
+def test_cli_schema_rejects_undeclared_nested_field():
+    schema, report = _schema_and_layered_report()
+    report["hotspots"][0]["new_metric"] = 1
+
+    assert _schema_violations(schema, report) == ["$.hotspots[0]: undeclared field 'new_metric'"]
 
 
 def test_cli_full_report_terminal(tmp_path: Path):

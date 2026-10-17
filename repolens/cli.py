@@ -24,6 +24,7 @@ from repolens.formatters import (
     to_dot,
     to_mermaid,
 )
+from repolens.models import REPORT_JSON_SCHEMA
 
 console = Console(legacy_windows=False)
 err_console = Console(stderr=True, legacy_windows=False)
@@ -70,6 +71,7 @@ class RepoLensGroup(click.Group):
     default=None,
     help="Report format (text, json).",
 )
+@click.option("--schema", "print_schema", is_flag=True, help="Print the JSON Schema for the --format json report and exit.")
 @click.option("-i", "--ignore", "custom_ignores", multiple=True, help="Custom glob patterns to ignore.")
 @click.option("--no-gitignore", is_flag=True, default=False, help="Do not read .gitignore rules.")
 @click.version_option(version=__version__, prog_name="repolens")
@@ -78,6 +80,7 @@ def main(
     ctx: click.Context,
     json_output: bool,
     fmt: str | None,
+    print_schema: bool,
     custom_ignores: tuple[str, ...],
     no_gitignore: bool,
     path: str = ".",
@@ -86,6 +89,9 @@ def main(
 
     Run 'repolens [PATH]' to analyze a repository and generate an explainable map.
     """
+    if print_schema:
+        click.echo(json.dumps(REPORT_JSON_SCHEMA, indent=2))
+        sys.exit(0)
     if ctx.invoked_subcommand is None:
         effective_json = json_output or (fmt == "json") or ctx.params.get("json_output", False)
         run_full_analysis(

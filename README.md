@@ -250,6 +250,7 @@ pip install -e ".[dev]"
 
 ### Global Options
 - `--json`: Output machine-readable JSON across all commands.
+- `--schema`: Print the JSON Schema (draft-07) for the `--format json` report and exit. Lets tool integrators and AI agents validate RepoLens output without reverse-engineering `repolens/models.py`.
 - `-i, --ignore <pattern>`: Add custom glob ignore patterns (e.g. `-i "legacy/**"`). Can be specified multiple times.
 - `--no-gitignore`: Bypass `.gitignore` rules and include ignored files in analysis.
 - `--version`: Display version information and exit.
