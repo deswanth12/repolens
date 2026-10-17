@@ -15,7 +15,6 @@ from rich.console import Console
 
 from repolens import __version__
 from repolens.discovery.scanner import RepositoryScanner
-from repolens.models import REPORT_JSON_SCHEMA
 from repolens.engine import RepoLensEngine
 from repolens.formatters import (
     format_file_explanation,
@@ -25,6 +24,7 @@ from repolens.formatters import (
     to_dot,
     to_mermaid,
 )
+from repolens.models import REPORT_JSON_SCHEMA
 
 console = Console(legacy_windows=False)
 err_console = Console(stderr=True, legacy_windows=False)

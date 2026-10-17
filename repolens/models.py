@@ -261,22 +261,28 @@ class FullAnalysisResult:
         }
 
 
-REPORT_JSON_SCHEMA: dict[str, Any] = {
+def _require_all_properties(schema: dict[str, Any]) -> dict[str, Any]:
+    """Mark every declared property as required, at every nesting level.
+
+    Every ``to_dict()`` in this module always emits all of its fields (nullable
+    ones as ``null``), so a declared property missing from a report is drift,
+    never an optional field.
+    """
+    if "properties" in schema:
+        schema["required"] = list(schema["properties"])
+        for sub in schema["properties"].values():
+            _require_all_properties(sub)
+    for key in ("items", "additionalProperties"):
+        if isinstance(schema.get(key), dict):
+            _require_all_properties(schema[key])
+    return schema
+
+
+REPORT_JSON_SCHEMA: dict[str, Any] = _require_all_properties({
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "RepoLens Full Analysis Report",
     "description": "Shape of the JSON emitted by `repolens --format json` / `repolens report --format json`, i.e. FullAnalysisResult.to_dict().",
     "type": "object",
-    "required": [
-        "summary",
-        "entry_points",
-        "reading_order",
-        "hotspots",
-        "architecture",
-        "onboarding",
-        "graph",
-        "files",
-        "modules",
-    ],
     "properties": {
         "summary": {
             "type": "object",
@@ -493,7 +499,7 @@ REPORT_JSON_SCHEMA: dict[str, Any] = {
             },
         },
     },
-}
+})
 
 
 @dataclass
